@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from src.db.main import db_init
+from src.auth.router import auth_router
 
 
 @asynccontextmanager
@@ -26,3 +27,5 @@ async def read_root():
     return {
         "message": "Hello world!"
     }
+
+app.include_router(auth_router, prefix='/api/{version}/auth')
