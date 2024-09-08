@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from src.db.main import db_init
 from src.auth.router import auth_router
+from src.difficulty.router import difficulty_router
 
 
 @asynccontextmanager
@@ -30,3 +31,5 @@ async def read_root():
 
 app.include_router(
     auth_router, prefix='/api/{version}/auth', tags=['auth'])
+app.include_router(
+    difficulty_router, prefix='/api/{version}/difficulties', tags=['difficulty'])

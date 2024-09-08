@@ -22,4 +22,12 @@ Accept: application/json
   "password": "strongpassword"
 }
 
-###
+### Create difficulty
+POST http://127.0.0.1:8000/api/v1/difficulties/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "easy",
+  "description": "the lowest difficulty level"
+}
