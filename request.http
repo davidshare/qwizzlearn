@@ -1,15 +1,25 @@
 GET http://127.0.0.1:8000
 
-###
+### REGISTER
 
 POST http://127.0.0.1:8000/api/v1/auth/register
 Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "example_user3@example.com",
+  "email": "cynder@example.com",
   "password": "strongpassword",
-  "username": "cringy"
+  "username": "cynder"
+}
+
+### LOGIN
+POST http://127.0.0.1:8000/api/v1/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "cynder@example.com",
+  "password": "strongpassword"
 }
 
 ###
