@@ -14,5 +14,4 @@ async def register(user: UserCreate, session: AsyncSession = Depends(get_session
 
 @auth_router.post("/login", status_code=status.HTTP_200_OK, response_model=UserRead)
 async def login(login_data: UserLogin, session: AsyncSession = Depends(get_session)):
-    print(login_data, '============================================================================================>')
     return await AuthController.login(login_data, session)
