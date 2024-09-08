@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.main import get_session
 from .schemas import UserCreate, UserRead, UserLogin
 from .controller import AuthController
 from .dependencies import RefreshTokenBearer, AccessTokenBearer
-from src.db.redis import add_jti_to_blocklist
 
 auth_router = APIRouter()
 
@@ -27,13 +25,5 @@ async def refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
 
 
 @auth_router.get("/logout")
-async def logout(token_details: dict = Depends(AccessTokenBearer())) -> None:
-    jti = token_details["jti"]
-    await add_jti_to_blocklist(jti)
-
-    return JSONResponse(
-        content={
-            "message": "Logged out successfully!!!",
-            "status": status.HTTP_200_OK
-        }
-    )
+async def logout(token_details: dict = Depends(AccessTokenBearer())):
+    return await AuthController.logout(token_details)
