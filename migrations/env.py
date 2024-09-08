@@ -9,6 +9,7 @@ from alembic import context
 from sqlmodel import SQLModel
 from src.config import Config
 from src.auth.models import User
+from src.difficulty.models import Difficulty
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
