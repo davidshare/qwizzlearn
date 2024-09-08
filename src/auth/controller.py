@@ -1,14 +1,15 @@
-
-from fastapi import Depends, status
+from datetime import datetime, timedelta
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
+from fastapi import Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
-from datetime import timedelta
 
 from src.db.main import get_session
+from src.db.redis import add_jti_to_blocklist
 from .schemas import UserCreate, UserRead, UserLogin
 from .service import AuthService
 from .utils import verify_password, create_access_token
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
 
 REFRESH_TOKEN_EXPIRY = 2
 user_service = AuthService()
@@ -73,4 +74,30 @@ class AuthController:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid email or password."
+        )
+
+    @staticmethod
+    def refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
+        expiry_timestamp = token_details["exp"]
+
+        if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
+            new_access_token = create_access_token(
+                user_data=token_details["user"])
+
+            return JSONResponse(content={"access_token": new_access_token})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired token"
+        )
+
+    @staticmethod
+    async def logout(token_details: dict = Depends(AccessTokenBearer())):
+        jti = token_details["jti"]
+        await add_jti_to_blocklist(jti)
+
+        return JSONResponse(
+            content={
+                "message": "Logged out successfully!!!",
+                "status": status.HTTP_200_OK
+            }
         )
