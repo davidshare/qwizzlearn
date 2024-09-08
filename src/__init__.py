@@ -28,4 +28,5 @@ async def read_root():
         "message": "Hello world!"
     }
 
-app.include_router(auth_router, prefix='/api/{version}/auth')
+app.include_router(
+    auth_router, prefix='/api/{version}/auth', tags=['auth'])
