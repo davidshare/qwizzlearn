@@ -1,24 +1,24 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from src.db.main import db_init
-from src.auth.router import auth_router
+from src.authentication.router import authentication_router
 from src.difficulty.router import difficulty_router
 
 
 @asynccontextmanager
-async def life_span(app: FastAPI):
+async def life_span(lifespan_app: FastAPI):
     print("server is starting...")
     await db_init()
     yield
     print("Server has been stopped. ..")
 
 
-version = "v1"
+VERSION = "v1"
 
 app = FastAPI(
     title="Qwizzlearn",
     description="An application that lets people take quizzes and compete",
-    version=version,
+    version=VERSION,
     lifespan=life_span
 )
 
@@ -30,6 +30,6 @@ async def read_root():
     }
 
 app.include_router(
-    auth_router, prefix='/api/{version}/auth', tags=['auth'])
+    authentication_router, prefix='/api/{VERSION}/auth', tags=['authentication'])
 app.include_router(
-    difficulty_router, prefix='/api/{version}/difficulties', tags=['difficulty'])
+    difficulty_router, prefix='/api/{VERSION}/difficulties', tags=['difficulty'])
