@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.authorisation.dependencies import route_with_action
+from src.authorisation.schemas import UserRolesResponse
 from src.db.main import get_session
 
 from .controller import AuthenticationController
@@ -76,19 +78,24 @@ async def current_user(user=Depends(get_current_user)):
     return user
 
 
-@authentication_router.get("/roles")
-async def get_user_roles(user_id: int, session: AsyncSession = Depends(get_session)):
+@authentication_router.get("/roles", response_model=UserRolesResponse)
+async def get_user_roles(session: AsyncSession = Depends(get_session)):
     """
-    Retrieve the roles for a specific user.
+    Retrieve the roles for a specific user. The user ID is hardcoded for testing purposes.
 
     Args:
-        user_id (int): The ID of the user whose roles are to be retrieved.
         session (AsyncSession): The database session to use for the operation.
 
     Returns:
-        List[str]: A list of role names associated with the user.
+        UserRolesResponse: A list of roles represented as dictionaries.
     """
-    return await AuthenticationController.get_user_roles(user_id, session)
+    user_id = 1  # Hardcoded user ID for testing
+    try:
+        roles = await AuthenticationController.get_user_roles(user_id, session)
+        return UserRolesResponse(user_id=user_id, roles=roles)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
 @authentication_router.get("/logout")

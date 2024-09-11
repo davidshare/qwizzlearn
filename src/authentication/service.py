@@ -4,7 +4,8 @@ from passlib.context import CryptContext
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.authorisation.models import UserRoles
+from src.authorisation.models import Role, UserRoles
+from src.authorisation.schemas import RoleResponse
 
 from .models import User
 from .schemas import UserCreate
@@ -83,16 +84,24 @@ class AuthenticationService:
 
         return new_user
 
-    async def get_user_roles(self, user_id: int, session: AsyncSession) -> List[UserRoles]:
+    async def get_user_roles(self, user_id: int, session: AsyncSession) -> List[RoleResponse]:
         """
-        Fetch all roles associated with a given user ID.
-        :param user_id: ID of the user.
-        :param session: Async SQLModel session.
-        :return: A list of UserRoles.
+        Fetch all roles associated with a given user ID, including role details.
+
+        Args:
+            user_id (int): ID of the user.
+            session (AsyncSession): Async SQLModel session.
+
+        Returns:
+            List[RoleResponse]: A list of roles associated with the user.
         """
         if not user_id:
             raise ValueError("Please provide a valid user id")
 
-        statement = select(UserRoles).where(UserRoles.user_id == user_id)
-        roles = await session.exec(statement)
-        return roles.all()
+        # Join UserRoles with Role to get role details
+        statement = select(Role).join(UserRoles).where(
+            UserRoles.user_id == user_id)
+        result = await session.exec(statement)
+        roles = result.all()
+
+        return [RoleResponse.model_validate(role) for role in roles]
