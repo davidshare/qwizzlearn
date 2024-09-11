@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.authorisation.dependencies import route_with_action
 from src.db.main import get_session
-from .schemas import UserCreate, UserRead, UserLogin
+
 from .controller import AuthController
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import (
+    AccessTokenBearer, RefreshTokenBearer, get_current_user)
+from .schemas import UserCreate, UserLogin, UserRead
 
 auth_router = APIRouter()
 
@@ -22,6 +25,12 @@ async def login(login_data: UserLogin, session: AsyncSession = Depends(get_sessi
 @auth_router.get("/refresh-token")
 async def refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
     return AuthController.refresh_token(token_details)
+
+
+@auth_router.get("/me")
+@route_with_action("get_current_user")
+async def current_user(user=Depends(get_current_user)):
+    return user
 
 
 @auth_router.get("/logout")

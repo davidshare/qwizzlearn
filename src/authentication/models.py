@@ -1,11 +1,13 @@
 from datetime import datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field, Column
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Column, Relationship
 from sqlalchemy import Index
 import sqlalchemy.dialects.postgresql as pg
+from src.authorisation.models import Role, UserRoles
 
 
 class User(SQLModel, table=True):
+
     __tablename__ = "users"
     __table_args__ = (
         Index('ix_unique_username', 'username', unique=True),
@@ -22,7 +24,10 @@ class User(SQLModel, table=True):
     phone_verified: bool = False
     password_hash: str = Field(exclude=True)
     is_active: bool = False
-    role: str = "user"
+
+    roles: List[Role] = Relationship(
+        back_populates="users", link_model=UserRoles)
+
     created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now))
     updated_at: datetime = Field(sa_column=Column(
