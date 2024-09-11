@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from sqlmodel import SQLModel
 from src.config import Config
-from src.auth.models import User
+from src.authorisation.models import Role
+from src.authorisation.models import Permission
+from src.authentication.models import User
 from src.difficulty.models import Difficulty
 
 # this is the Alembic Config object, which provides
