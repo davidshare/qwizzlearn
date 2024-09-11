@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
 from pydantic import EmailStr, BaseModel, Field
+
+from src.authorisation.schemas import UserRolesResponse
 
 # Schema for creating a new user
 
@@ -20,6 +22,7 @@ class UserCreate(BaseModel):
     email: EmailStr = Field(..., max_length=40)
     phone: Optional[str] = None
     password: str = Field(..., min_length=8)
+    role: Optional[UserRolesResponse] = []
 
 # Schema for user login
 
@@ -64,7 +67,7 @@ class UserRead(BaseModel):
     phone: Optional[str] = None
     phone_verified: bool
     is_active: bool
-    roles: Optional[List] = []
+    roles: Optional[UserRolesResponse] = []
     created_at: datetime
     updated_at: datetime
 

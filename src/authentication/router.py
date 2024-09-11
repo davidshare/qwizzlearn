@@ -14,11 +14,13 @@ from .schemas import UserCreate, UserLogin, UserRead
 authentication_router = APIRouter()
 
 
-@authentication_router.post("/register", status_code=status.HTTP_201_CREATED,
-                            response_model=UserRead)
+@authentication_router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 async def register(user: UserCreate, session: AsyncSession = Depends(get_session)):
     """
     Register a new user.
+
+    Checks if a user with the given email or username already exists. If not,
+    creates a new user and returns the user details including roles.
 
     Args:
         user (UserCreate): User details including username, email, phone, and password.

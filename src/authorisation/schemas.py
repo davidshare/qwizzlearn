@@ -18,7 +18,7 @@ class RoleResponse(BaseModel):
     id: int
     name: str
     description: Optional[str]
-    created_by: Optional[int]  # Creator might be optional in the response
+    created_by: Optional[int] 
 
     class Config:
         """
@@ -41,7 +41,7 @@ class UserRolesResponse(BaseModel):
     Response schema for the roles of a user.
     """
     user_id: int
-    roles: List[RoleResponse]  # A list of roles the user has been assigned
+    roles: List[RoleResponse] = []
 
     class Config:
         """

@@ -26,37 +26,51 @@ class AuthenticationController:
         """
         Register a new user.
 
-        Checks if a user with the given email or username already exists. If not ,
-        creates a new user and returns the user details including roles.
+        This method performs the following steps:
+        1. Checks if a user with the given email or username already exists.
+        2. If no existing user is found, creates a new user with the provided details.
+        3. Retrieves the roles associated with the newly created user.
+        4. Returns the newly created user details along with their roles.
 
         Args:
-            user(UserCreate): User details including username, email, phone, and password.
-            session(AsyncSession): The database session to use for the operation.
+            user (UserCreate): The user details including username, email, phone, and password.
+            session (AsyncSession, optional): The database session to use for the operation. 
+                If not provided, it is obtained from the dependency `get_session`.
 
         Returns:
-            UserRead: The newly created user details including id, username, email,
-                    email verification status, and timestamps.
+            UserRead: The newly created user details including ID, username, email, 
+                      email verification status, and roles.
 
         Raises:
-            HTTPException: If a user with the same email or username already exists.
+            HTTPException: 
+                - If a user with the same email already exists (HTTP 403 Forbidden).
+                - If a user with the same username already exists (HTTP 403 Forbidden).
+                - If an unexpected error occurs during user creation or role retrieval (HTTP 500 Internal Server Error).
         """
-        # Check if user with the given email or username exists
-        existence = await authentication_service.user_exist(session, email=user.email, username=user.username)
+        try:
+            # Check if a user with the given email or username exists
+            existence = await authentication_service.user_exist(session, email=user.email, username=user.username)
 
-        if existence.get('email'):
+            if existence.get('email'):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="User with this email already exists"
+                )
+
+            if existence.get('username'):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="User with this username already exists"
+                )
+
+            # Create a new user if no existing user with the same email or username
+            new_user = await authentication_service.create_user(user, session)
+
+            new_user_dict = new_user.model_dump()
+            return UserRead(**new_user_dict)
+
+        except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="User with this email already exists"
-            )
-
-        if existence.get('username'):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="User with this username already exists"
-            )
-
-        # Create new user if no existing user with the same email or username
-        new_user = await authentication_service.create_user(user, session)
-        new_user.roles = await authentication_service.get_user_roles(new_user.id, session)
-        return new_user
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(
+                    e)) from e
 
     @staticmethod
     async def login(login_data: UserLogin, session: AsyncSession = Depends(get_session)) -> JSONResponse:

@@ -42,11 +42,11 @@ class User(SQLModel, table=True):
     email_verified: bool = False
     phone: Optional[str] = None
     phone_verified: bool = False
-    password_hash: str = Field(exclude=True)
+    password_hash: str = Field(..., nullable=False)
     is_active: bool = False
 
-    roles: List[Role] = Relationship(
-        back_populates="users", link_model=UserRoles)
+    roles: List[Role] = Relationship(back_populates="users", link_model=UserRoles, sa_relationship_kwargs={
+        'lazy': 'selectin'})
 
     created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now))

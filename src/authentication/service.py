@@ -67,21 +67,27 @@ class AuthenticationService:
 
         return result
 
-    async def create_user(self, user: UserCreate, session: AsyncSession) -> User:
+    async def create_user(self, user_data: UserCreate, session: AsyncSession) -> User:
         """
         Create a new user.
         :param user: Data required to create the user (from UserCreate schema).
         :param session: Async SQLModel session.
         :return: The newly created user.
         """
-        user_dict = user.model_dump()
+        user_dict = user_data.model_dump()
         new_user = User(**user_dict)
         new_user.password_hash = generate_password_hash(user_dict['password'])
 
-        session.add(new_user)
-        await session.commit()
-        await session.refresh(new_user)  # Await session refresh
+        try:
+            session.add(new_user)
+            await session.commit()
+            await session.refresh(new_user)
+        except Exception as e:
+            await session.rollback()
+            raise e
 
+        if new_user.roles is None:
+            new_user.roles = []
         return new_user
 
     async def get_user_roles(self, user_id: int, session: AsyncSession) -> List[RoleResponse]:
