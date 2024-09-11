@@ -4,35 +4,102 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.authorisation.dependencies import route_with_action
 from src.db.main import get_session
 
-from .controller import AuthController
+from .controller import AuthenticationController
 from .dependencies import (
     AccessTokenBearer, RefreshTokenBearer, get_current_user)
 from .schemas import UserCreate, UserLogin, UserRead
 
-auth_router = APIRouter()
+authentication_router = APIRouter()
 
 
-@auth_router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+@authentication_router.post("/register", status_code=status.HTTP_201_CREATED,
+                            response_model=UserRead)
 async def register(user: UserCreate, session: AsyncSession = Depends(get_session)):
-    return await AuthController.register(user, session)
+    """
+    Register a new user.
+
+    Args:
+        user (UserCreate): User details including username, email, phone, and password.
+        session (AsyncSession): The database session to use for the operation.
+
+    Returns:
+        UserRead: The registered user details including id, username, email,
+                email verification status, and timestamps.
+    """
+    return await AuthenticationController.register(user, session)
 
 
-@auth_router.post("/login", status_code=status.HTTP_200_OK, response_model=UserRead)
+@authentication_router.post("/login", status_code=status.HTTP_200_OK,
+                            response_model=UserRead)
 async def login(login_data: UserLogin, session: AsyncSession = Depends(get_session)):
-    return await AuthController.login(login_data, session)
+    """
+    Log in a user and return user details.
+
+    Args:
+        login_data (UserLogin): Email and password of the user.
+        session (AsyncSession): The database session to use for the operation.
+
+    Returns:
+        UserRead: The user details including id, username, email, email
+                verification status, and timestamps.
+    """
+    return await AuthenticationController.login(login_data, session)
 
 
-@auth_router.get("/refresh-token")
+@authentication_router.get("/refresh-token")
 async def refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
-    return AuthController.refresh_token(token_details)
+    """
+    Refresh the authentication token.
+
+    Args:
+        token_details (dict): Details of the refresh token provided by the 
+            RefreshTokenBearer dependency.
+
+    Returns:
+        dict: A dictionary containing the new access and refresh tokens.
+    """
+    return AuthenticationController.refresh_token(token_details)
 
 
-@auth_router.get("/me")
+@authentication_router.get("/me")
 @route_with_action("get_current_user")
 async def current_user(user=Depends(get_current_user)):
+    """
+    Retrieve the current user's details.
+
+    Args:
+        user: The current user obtained from the get_current_user dependency.
+
+    Returns:
+        UserRead: The details of the currently authenticated user.
+    """
     return user
 
 
-@auth_router.get("/logout")
+@authentication_router.get("/roles")
+async def get_user_roles(user_id: int, session: AsyncSession = Depends(get_session)):
+    """
+    Retrieve the roles for a specific user.
+
+    Args:
+        user_id (int): The ID of the user whose roles are to be retrieved.
+        session (AsyncSession): The database session to use for the operation.
+
+    Returns:
+        List[str]: A list of role names associated with the user.
+    """
+    return await AuthenticationController.get_user_roles(user_id, session)
+
+
+@authentication_router.get("/logout")
 async def logout(token_details: dict = Depends(AccessTokenBearer())):
-    return await AuthController.logout(token_details)
+    """
+    Log out the current user by invalidating their access token.
+
+    Args:
+        token_details (dict): Details of the access token from the AccessTokenBearer dependency.
+
+    Returns:
+        dict: A confirmation message or status indicating the logout result.
+    """
+    return await AuthenticationController.logout(token_details)
