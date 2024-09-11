@@ -1,40 +1,54 @@
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from typing import Dict, List, Optional
 
 from passlib.context import CryptContext
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .schemas import UserCreate
+from src.authorisation.models import UserRoles
+
 from .models import User
+from .schemas import UserCreate
 from .utils import generate_password_hash
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class AuthService:
+class AuthenticationService:
+    """
+        Class to handle authentication
+    """
 
-    async def get_user_by_email(self, email: str, session: AsyncSession):
+    async def get_user_by_email(self, email: str, session: AsyncSession) -> Optional[User]:
+        """
+        Fetch a user by their email address.
+        :param email: Email address of the user.
+        :param session: Async SQLModel session.
+        :return: The user if found, or None.
+        """
         statement = select(User).where(User.email == email)
         result = await session.exec(statement)
         user = result.first()
         return user
 
-    async def get_user_by_username(self, username: str, session: AsyncSession):
+    async def get_user_by_username(self, username: str, session: AsyncSession) -> Optional[User]:
+        """
+        Fetch a user by their username.
+        :param username: Username of the user.
+        :param session: Async SQLModel session.
+        :return: The user if found, or None.
+        """
         statement = select(User).where(User.username == username)
         result = await session.exec(statement)
         user = result.first()
         return user
 
-    async def user_exist(self, session: AsyncSession, email: str = None, username: str = None):
+    async def user_exist(self, session: AsyncSession, email: Optional[str] = None, username: Optional[str] = None) -> Dict[str, bool]:
         """
-        Check if a user exists based on email or username.
-
-        Args:
-            session (AsyncSession): The async session to interact with the database.
-            email (str): The email of the user to check.
-            username (str): The username of the user to check.
-
-        Returns:
-            dict: A dictionary containing the existence status of the email and/or username.
+        Check if a user exists by email or username.
+        :param session: Async SQLModel session.
+        :param email: Email address (optional).
+        :param username: Username (optional).
+        :return: A dictionary indicating if the user exists by email or username.
         """
         if not email and not username:
             raise ValueError(
@@ -51,16 +65,34 @@ class AuthService:
             result['username'] = user_username is not None
 
         return result
-    
-    async def create_user(self, user: UserCreate, session: AsyncSession) -> User:
-        user_dict = user.model_dump()
 
+    async def create_user(self, user: UserCreate, session: AsyncSession) -> User:
+        """
+        Create a new user.
+        :param user: Data required to create the user (from UserCreate schema).
+        :param session: Async SQLModel session.
+        :return: The newly created user.
+        """
+        user_dict = user.model_dump()
         new_user = User(**user_dict)
         new_user.password_hash = generate_password_hash(user_dict['password'])
-        
+
         session.add(new_user)
         await session.commit()
         await session.refresh(new_user)  # Await session refresh
 
         return new_user
 
+    async def get_user_roles(self, user_id: int, session: AsyncSession) -> List[UserRoles]:
+        """
+        Fetch all roles associated with a given user ID.
+        :param user_id: ID of the user.
+        :param session: Async SQLModel session.
+        :return: A list of UserRoles.
+        """
+        if not user_id:
+            raise ValueError("Please provide a valid user id")
+
+        statement = select(UserRoles).where(UserRoles.user_id == user_id)
+        roles = await session.exec(statement)
+        return roles.all()
