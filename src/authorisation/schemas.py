@@ -7,6 +7,7 @@ class PermissionCreate(BaseModel):
     Schema for creating a new permission.
     """
     action: str
+    is_owner_only: Optional[bool] = False
     description: Optional[str] = None
 
 
@@ -15,6 +16,7 @@ class PermissionUpdate(BaseModel):
     Schema for updating a permission.
     """
     action: Optional[str] = None
+    is_owner_only: Optional[bool] = False
     description: Optional[str] = None
     created_by: Optional[int] = None
 
@@ -25,6 +27,7 @@ class PermissionResponse(BaseModel):
     """
     id: int
     action: str
+    is_owner_only: Optional[bool] = False
     description: Optional[str]
     created_by: Optional[int]  # Creator might be optional in the response
 

@@ -1,8 +1,11 @@
 from typing import List
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+
+from src.authentication.models import User
 from .models import Role, Permission
 from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
+from .exceptions import PermissionNotFoundException
 
 
 class AuthorisationService:
@@ -37,6 +40,22 @@ class AuthorisationService:
 
         return existing_permissions + new_permissions
 
+    async def update_permission(self, permission_id: int, permission_data: PermissionUpdate, user: User, session: AsyncSession):
+        permission = await self.get_permission_by_id(permission_id, session)
+
+        if not permission:
+            raise PermissionNotFoundException("Permission not found")
+
+        for key, value in permission_data.model_dump(exclude_unset=True).items():
+            setattr(permission, key, value)
+
+        if permission.created_by != user.id:
+            permission.created_by = user.id
+
+        await session.commit()
+        await session.refresh(permission)
+        return permission
+
     async def get_all_permissions(self, session: AsyncSession):
         statement = select(Permission)
         result = await session.exec(statement)
@@ -52,7 +71,6 @@ class AuthorisationService:
             Permission.action == permission_action)
         permission = await session.exec(statement)
         return permission.first()
-
 
     async def create_role(self, role_data: RoleCreate, session: AsyncSession):
         new_role = Role(**role_data.model_dump())
@@ -123,20 +141,6 @@ class AuthorisationService:
             await session.delete(role)
             await session.commit()
             return {"message": f"Role {role_id} deleted successfully."}
-        return None
-
-    async def update_permission(self, permission_id: int, permission_data: PermissionUpdate, session: AsyncSession):
-        statement = select(Permission).where(Permission.id == permission_id)
-        result = await session.exec(statement)
-        permission = result.first()
-
-        if permission:
-            for key, value in permission_data.model_dump(exclude_unset=True).items():
-                setattr(permission, key, value)
-
-            await session.commit()
-            await session.refresh(permission)
-            return permission
         return None
 
     async def delete_permission(self, permission_id: int, session: AsyncSession):

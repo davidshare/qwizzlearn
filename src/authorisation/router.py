@@ -33,8 +33,8 @@ async def get_permission_by_action(permission_action: str, session: AsyncSession
 
 
 @authorisation_router.put("/permissions/{permission_id}", status_code=status.HTTP_200_OK)
-async def update_permission(permission_id: int, permission_data: PermissionUpdate, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.update_permission(permission_id, permission_data, session)
+async def update_permission(permission_id: int, permission_data: PermissionUpdate, user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.update_permission(permission_id, permission_data, user, session)
 
 
 @authorisation_router.delete("/permissions/{permission_id}", status_code=status.HTTP_200_OK)

@@ -5,6 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.authentication.models import User
 from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
 from .service import AuthorisationService
+from .exceptions import PermissionNotFoundException
 
 authorisation_service = AuthorisationService()
 
@@ -20,6 +21,22 @@ class AuthorisationController:
             )
 
         return await authorisation_service.create_permission(permission_data, user.id, session)
+
+    @staticmethod
+    async def update_permission(permission_id: int, permission_data: PermissionUpdate, user: User, session: AsyncSession):
+        if not user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User ID is missing. You need a valid user to create permissions."
+            )
+
+        try:
+            permission = await authorisation_service.update_permission(permission_id, permission_data, user, session)
+            return permission
+        except PermissionNotFoundException:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
+            )
 
     @staticmethod
     async def get_all_permissions(session: AsyncSession):
@@ -80,14 +97,6 @@ class AuthorisationController:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
         return await authorisation_service.delete_role(role_id, session)
-
-    @staticmethod
-    async def update_permission(permission_id: int, permission_data: PermissionUpdate, session: AsyncSession):
-        permission = await authorisation_service.get_permission_by_id(permission_id, session)
-        if not permission:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found")
-        return await authorisation_service.update_permission(permission_id, permission_data, session)
 
     @staticmethod
     async def delete_permission(permission_id: int, session: AsyncSession):
