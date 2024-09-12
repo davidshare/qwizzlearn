@@ -42,6 +42,18 @@ class AuthorisationService:
         result = await session.exec(statement)
         return result.all()
 
+    async def get_permission_by_id(self, permission_id: int, session: AsyncSession):
+        statement = select(Permission).where(Permission.id == permission_id)
+        result = await session.exec(statement)
+        return result.first()
+
+    async def get_permission_by_action(self, permission_action: str, session: AsyncSession):
+        statement = select(Permission).where(
+            Permission.action == permission_action)
+        permission = await session.exec(statement)
+        return permission.first()
+
+
     async def create_role(self, role_data: RoleCreate, session: AsyncSession):
         new_role = Role(**role_data.model_dump())
         session.add(new_role)
@@ -82,25 +94,6 @@ class AuthorisationService:
 
         role = self.get_role_by_name(role_name, session)
         return role is not None
-
-    async def get_permission_by_id(self, permission_id: int, session: AsyncSession):
-        statement = select(Permission).where(Permission.id == permission_id)
-        result = await session.exec(statement)
-        return result.first()
-
-    async def get_permission_by_name(self, permission_name: str, session: AsyncSession):
-        statement = select(Permission).where(
-            Permission.name == permission_name)
-        permission = await session.exec(statement)
-        return permission.first()
-
-    async def permission_exist(self, permission_name: str, session: AsyncSession):
-        if not permission_name:
-            raise ValueError(
-                "Please provide the role name")
-
-        permission = self.get_permission_by_name(permission_name, session)
-        return permission is not None
 
     async def get_all_roles(self, session: AsyncSession):
         statement = select(Role)
