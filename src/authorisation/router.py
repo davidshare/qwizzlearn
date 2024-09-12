@@ -47,6 +47,11 @@ async def create_role(role_data: List[RoleCreate], user=Depends(get_current_user
     return await AuthorisationController.create_role(role_data, user, session)
 
 
+@ authorisation_router.put("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
+async def update_role(role_id: int, role_data: RoleUpdate, user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.update_role(role_id, role_data, user, session)
+
+
 @ authorisation_router.get("/roles", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def get_all_roles(session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.get_all_roles(session)
@@ -65,11 +70,6 @@ async def get_role_by_name(role_name: str, session: AsyncSession = Depends(get_s
 @ authorisation_router.post("/roles/{role_id}/permissions/{permission_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.assign_permission_to_role(role_id, permission_id, session)
-
-
-@ authorisation_router.put("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
-async def update_role(role_id: int, role_data: RoleUpdate, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.update_role(role_id, role_data, session)
 
 
 @ authorisation_router.delete("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)

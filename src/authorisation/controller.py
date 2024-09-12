@@ -79,6 +79,20 @@ class AuthorisationController:
             ) from exc
 
     @staticmethod
+    async def update_role(role_id: int, role_data: RoleUpdate, user: User, session: AsyncSession):
+        if not user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User ID is missing. You need a valid user to create permissions."
+            )
+        try:
+            return await authorisation_service.update_role(role_id, role_data, user, session)
+        except RoleNotFoundException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found"
+            ) from exc
+
+    @staticmethod
     async def get_all_roles(session: AsyncSession):
         return await authorisation_service.get_all_roles(session)
 
@@ -109,14 +123,6 @@ class AuthorisationController:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Role or Permission not found")
         return role
-
-    @staticmethod
-    async def update_role(role_id: int, role_data: RoleUpdate, session: AsyncSession):
-        role = await authorisation_service.get_role_by_id(role_id, session)
-        if not role:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-        return await authorisation_service.update_role(role_id, role_data, session)
 
     @staticmethod
     async def delete_role(role_id: int, session: AsyncSession):

@@ -5,7 +5,7 @@ from sqlmodel import select
 from src.authentication.models import User
 from .models import Role, Permission
 from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
-from .exceptions import PermissionNotFoundException
+from .exceptions import PermissionNotFoundException, RoleNotFoundException
 
 
 class AuthorisationService:
@@ -128,6 +128,33 @@ class AuthorisationService:
         result = await session.exec(statement)
         return result.first()
 
+    async def update_role(self, role_id: int, role_data: RoleUpdate, user: User,  session: AsyncSession):
+        role = await self.get_role_by_id(role_id, session)
+
+        if not role:
+            raise RoleNotFoundException("Role not found")
+
+        for key, value in role_data.model_dump(exclude_unset=True).items():
+            setattr(role, key, value)
+
+        if role.created_by != user.id:
+            role.created_by = user.id
+
+        await session.commit()
+        await session.refresh(role)
+        return role
+
+    async def delete_role(self, role_id: int, session: AsyncSession):
+        statement = select(Role).where(Role.id == role_id)
+        result = await session.exec(statement)
+        role = result.first()
+
+        if role:
+            await session.delete(role)
+            await session.commit()
+            return {"message": f"Role {role_id} deleted successfully."}
+        return None
+
     async def assign_permission_to_role(self, role_id: int, permission_id: int, session: AsyncSession):
         statement = select(Role).where(Role.id == role_id)
         result = await session.exec(statement)
@@ -143,28 +170,3 @@ class AuthorisationService:
             return role
         else:
             return None
-
-    async def update_role(self, role_id: int, role_data: RoleUpdate, session: AsyncSession):
-        statement = select(Role).where(Role.id == role_id)
-        result = await session.exec(statement)
-        role = result.first()
-
-        if role:
-            for key, value in role_data.model_dump(exclude_unset=True).items():
-                setattr(role, key, value)
-
-            await session.commit()
-            await session.refresh(role)
-            return role
-        return None
-
-    async def delete_role(self, role_id: int, session: AsyncSession):
-        statement = select(Role).where(Role.id == role_id)
-        result = await session.exec(statement)
-        role = result.first()
-
-        if role:
-            await session.delete(role)
-            await session.commit()
-            return {"message": f"Role {role_id} deleted successfully."}
-        return None
