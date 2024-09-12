@@ -3,7 +3,7 @@ from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.authentication.models import User
-from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
+from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole
 from .service import AuthorisationService
 from .exceptions import PermissionNotFoundException, RoleNotFoundException
 
@@ -131,9 +131,27 @@ class AuthorisationController:
                 detail="Role not found") from e
 
     @staticmethod
-    async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession):
-        role = await authorisation_service.assign_permission_to_role(role_id, permission_id, session)
-        if not role:
+    async def assign_permissions_to_role(permissions_data: List[AssignPermissionToRole], user: User, session: AsyncSession):
+        for permission in permissions_data:
+            if not permission.role_id or not permission.permission_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Please both the role_id and permission_id are required"
+                )
+        if not user.id:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Role or Permission not found")
-        return role
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User ID is missing. You need a valid user to create permissions."
+            )
+
+        try:
+            role_permissions = await authorisation_service.assign_permission_to_role(permissions_data, user, session)
+        except RoleNotFoundException as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Role not found") from e
+        except PermissionNotFoundException as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Permission not found") from e
+        return role_permissions

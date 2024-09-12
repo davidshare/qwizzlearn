@@ -39,6 +39,7 @@ class RolePermissions(SQLModel, table=True):
         default=None, foreign_key="roles.id", primary_key=True)
     permission_id: Optional[int] = Field(
         default=None, foreign_key="permissions.id", primary_key=True)
+    assigned_by: Optional[int] = Field(default=None, foreign_key="users.id")
 
     __table_args__ = (UniqueConstraint(
         'role_id', 'permission_id', name='uq_role_permission'),)

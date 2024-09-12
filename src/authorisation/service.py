@@ -1,10 +1,11 @@
 from typing import List
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from src.authentication.models import User
-from .models import Role, Permission
-from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
+from .models import Role, Permission, RolePermissions
+from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole
 from .exceptions import PermissionNotFoundException, RoleNotFoundException
 
 
@@ -155,18 +156,48 @@ class AuthorisationService:
             return {"message": f"Role {role_id} deleted successfully."}
         return None
 
-    async def assign_permission_to_role(self, role_id: int, permission_id: int, session: AsyncSession):
-        statement = select(Role).where(Role.id == role_id)
-        result = await session.exec(statement)
-        role = result.first()
+    async def assign_permission_to_role(self, permissions_data: List[AssignPermissionToRole], user: User, session: AsyncSession):
+        # Assuming all permissions have the same role_id
+        role_id = permissions_data[0].role_id
 
-        statement = select(Permission).where(Permission.id == permission_id)
-        result = await session.exec(statement)
-        permission = result.first()
+        role = await self.get_role_by_id(role_id, session)
+        if not role:
+            raise RoleNotFoundException(f"Role with id {role_id} not found")
 
-        if role and permission:
-            permission.role_id = role_id
-            await session.commit()
-            return role
-        else:
-            return None
+        role_permissions = []
+        for permission_data in permissions_data:
+            permission_id = permission_data.permission_id
+
+            permission = await self.get_permission_by_id(permission_id, session)
+            if not permission:
+                raise PermissionNotFoundException(
+                    f"Permission with id {permission_id} not found")
+
+            # Check if the permission is already assigned to the role
+            statement = select(RolePermissions).where(
+                RolePermissions.role_id == role_id,
+                RolePermissions.permission_id == permission_id
+            )
+            result = await session.exec(statement)
+            existing_role_permission = result.first()
+
+            if not existing_role_permission:
+                # Create the RolePermissions entry
+                role_permission = RolePermissions(
+                    role_id=role_id,
+                    permission_id=permission_id,
+                    assigned_by=user.id
+                )
+                role_permissions.append(role_permission)
+            else:
+                role_permissions.append(existing_role_permission)
+
+        try:
+            if role_permissions:
+                session.add_all(role_permissions)
+                await session.commit()
+        except IntegrityError:
+            await session.rollback()
+            return None, "IntegrityError"
+
+        return role_permissions, None

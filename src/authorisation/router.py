@@ -7,7 +7,7 @@ from src.authentication.dependencies import get_current_user, AccessTokenBearer
 from src.db.main import get_session
 
 from .controller import AuthorisationController
-from .schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate
+from .schemas import PermissionCreate, PermissionUpdate, RoleCreate, RoleUpdate, AssignPermissionToRole
 
 authorisation_router = APIRouter()
 
@@ -67,11 +67,11 @@ async def get_role_by_name(role_name: str, session: AsyncSession = Depends(get_s
     return await AuthorisationController.get_role_by_name(role_name, session)
 
 
-@ authorisation_router.post("/roles/{role_id}/permissions/{permission_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
-async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.assign_permission_to_role(role_id, permission_id, session)
-
-
 @ authorisation_router.delete("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def delete_role(role_id: int, session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.delete_role(role_id, session)
+
+
+@ authorisation_router.post("/roles/permissions", status_code=status.HTTP_200_OK)
+async def assign_permission_to_role(permissions_data: List[AssignPermissionToRole], user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.assign_permissions_to_role(permissions_data, user, session)

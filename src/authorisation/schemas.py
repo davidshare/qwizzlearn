@@ -100,7 +100,7 @@ class AssignPermissionToRole(BaseModel):
     """
     role_id: int
     permission_id: int
-    assigned_by: int  # Track the user who performed the assignment
+    assigned_by: Optional[int] = None
 
 
 class RolePermissionsResponse(BaseModel):
@@ -109,6 +109,7 @@ class RolePermissionsResponse(BaseModel):
     """
     role_id: int
     permissions: List[PermissionResponse]  # A list of permissions the role has
+    assigned_by: Optional[int] = None
 
     class Config:
         """
