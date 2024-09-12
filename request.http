@@ -7,9 +7,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "cynder@example.com",
+  "email": "lively@example.com",
   "password": "strongpassword",
-  "username": "cynder"
+  "username": "lively"
 }
 
 ### LOGIN
@@ -18,15 +18,25 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "cynder@example.com",
+  "email": "lively@example.com",
   "password": "strongpassword"
+}
+
+### Get current user
+GET  http://127.0.0.1:8000/api/v1/auth/me
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImVtYWlsIjoiY3luZGVyQGV4YW1wbGUuY29tIiwiaWQiOjF9LCJqdGkiOiIxM2NhYjdhOS04ZmNmLTRkOTAtOTNkNC0wMjBmMDU0MGM1MjgiLCJyZWZyZXNoIjpmYWxzZSwiZXhwIjoxNzI1OTU1MjczfQ.4VhCOtTnIJ0b4oR-ka7aQQwyDH2S8mBk-bUL-BZDnFI
+
+{
+  "name": "easy",
+  "description": "the lowest difficulty level"
 }
 
 ### Create difficulty
 POST http://127.0.0.1:8000/api/v1/difficulties/
 Content-Type: application/json
 Accept: application/json
-Authorization: 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImVtYWlsIjoiY3luZGVyQGV4YW1wbGUuY29tIiwiaWQiOjF9LCJqdGkiOiJhZjAwZjNjYy1hZDllLTRhMmEtYTA5ZC05MTQyYTNjZDc5MzMiLCJyZWZyZXNoIjpmYWxzZSwiZXhwIjoxNzI1OTE4NzI4fQ.WCxnjR60iE0hivhkhA7tbyWwRQGscpkjhJig1b1Izus
 
 {
   "name": "easy",

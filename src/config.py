@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6329
+    INITIAL_USER: str
+    INITIAL_PASSWORD: str
+    INITIAL_EMAIL: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
