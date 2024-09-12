@@ -75,9 +75,9 @@ class Role(SQLModel, table=True):
 
     # Relationships
     users: List["User"] = Relationship(
-        back_populates="roles", link_model=UserRoles)
+        back_populates="roles", link_model=UserRoles, sa_relationship_kwargs={"lazy": "selectin"})
     permissions: List["Permission"] = Relationship(
-        back_populates="roles", link_model=RolePermissions)
+        back_populates="roles", link_model=RolePermissions, sa_relationship_kwargs={'lazy': 'selectin'})
 
 
 class Permission(SQLModel, table=True):
@@ -86,7 +86,6 @@ class Permission(SQLModel, table=True):
 
     Attributes:
         id (Optional[int]): Primary key.
-        name (str): Unique name of the permission.
         action (str): Unique action that the permission allows.
         is_owner_only (bool): Whether the permission is restricted to the owner only.
         description (Optional[str]): Description of the permission.
@@ -97,12 +96,10 @@ class Permission(SQLModel, table=True):
     """
     __tablename__ = "permissions"
     __table_args__ = (
-        Index('ix_unique_permission_name', 'name', unique=True),
+        Index('ix_unique_permission_action', 'action', unique=True),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(sa_column=Column(
-        pg.VARCHAR, unique=True, nullable=False))
     action: str = Field(sa_column=Column(pg.VARCHAR, unique=True, index=True))
     is_owner_only: bool = Field(default=False)
     description: Optional[str] = None
@@ -114,4 +111,4 @@ class Permission(SQLModel, table=True):
 
     # Relationships
     roles: List["Role"] = Relationship(
-        back_populates="permissions", link_model=RolePermissions)
+        back_populates="permissions", link_model=RolePermissions, sa_relationship_kwargs={'lazy': 'selectin'})

@@ -4,7 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.main import get_session
 from .schemas import DifficultyRead, DifficultyCreate
 from .controller import DifficultyController
-from src.auth.dependencies import AccessTokenBearer
+from src.authentication.dependencies import AccessTokenBearer
 
 difficulty_router = APIRouter()
 access_token_bearer = AccessTokenBearer()

@@ -2,11 +2,44 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 
+class PermissionCreate(BaseModel):
+    """
+    Schema for creating a new permission.
+    """
+    action: str
+    description: Optional[str] = None
+
+
+class PermissionUpdate(BaseModel):
+    """
+    Schema for updating a permission.
+    """
+    action: Optional[str] = None
+    description: Optional[str] = None
+    created_by: Optional[int] = None
+
+
+class PermissionResponse(BaseModel):
+    """
+    Response schema for a permission.
+    """
+    id: int
+    action: str
+    description: Optional[str]
+    created_by: Optional[int]  # Creator might be optional in the response
+
+    class Config:
+        """
+        Map to orm models
+        """
+        from_attributes = True
+
+
 class RoleCreate(BaseModel):
     """
     Schema for creating a new role.
     """
-    name: str
+    action: str
     description: Optional[str] = None
     created_by: int  # ID of the user who created the role
 
@@ -16,9 +49,9 @@ class RoleResponse(BaseModel):
     Response schema for a role.
     """
     id: int
-    name: str
+    action: str
     description: Optional[str]
-    created_by: Optional[int] 
+    created_by: Optional[int]
 
     class Config:
         """
@@ -42,31 +75,6 @@ class UserRolesResponse(BaseModel):
     """
     user_id: int
     roles: List[RoleResponse] = []
-
-    class Config:
-        """
-        Map to orm models
-        """
-        from_attributes = True
-
-
-class PermissionCreate(BaseModel):
-    """
-    Schema for creating a new permission.
-    """
-    name: str
-    description: Optional[str] = None
-    created_by: int  # ID of the user who created the permission
-
-
-class PermissionResponse(BaseModel):
-    """
-    Response schema for a permission.
-    """
-    id: int
-    name: str
-    description: Optional[str]
-    created_by: Optional[int]  # Creator might be optional in the response
 
     class Config:
         """
@@ -102,13 +110,5 @@ class RoleUpdate(BaseModel):
     """
     Schema for updating a role.
     """
-    name: Optional[str] = None
-    description: Optional[str] = None
-
-
-class PermissionUpdate(BaseModel):
-    """
-    Schema for updating a permission.
-    """
-    name: Optional[str] = None
+    action: Optional[str] = None
     description: Optional[str] = None
