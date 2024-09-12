@@ -91,8 +91,6 @@ class AuthorisationService:
         existing_roles = []
         new_roles = []
 
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>> Service roles", role_data)
-
         for role in role_data:
             result = await session.exec(
                 select(Role).where(Role.name == role.name)

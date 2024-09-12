@@ -72,7 +72,6 @@ class AuthorisationController:
 
         try:
             role = await authorisation_service.create_role(role_data, user, session)
-            print("*********************************************", role_data)
             return role
         except RoleNotFoundException as exc:
             raise HTTPException(
