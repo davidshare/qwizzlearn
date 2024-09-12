@@ -37,7 +37,7 @@ async def update_permission(permission_id: int, permission_data: PermissionUpdat
     return await AuthorisationController.update_permission(permission_id, permission_data, user, session)
 
 
-@authorisation_router.delete("/permissions/{permission_id}", status_code=status.HTTP_200_OK)
+@authorisation_router.delete("/permissions/{permission_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def delete_permission(permission_id: int, session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.delete_permission(permission_id, session)
 

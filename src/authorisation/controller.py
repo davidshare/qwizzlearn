@@ -33,10 +33,10 @@ class AuthorisationController:
         try:
             permission = await authorisation_service.update_permission(permission_id, permission_data, user, session)
             return permission
-        except PermissionNotFoundException:
+        except PermissionNotFoundException as exc:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
-            )
+            ) from exc
 
     @staticmethod
     async def get_all_permissions(session: AsyncSession):
@@ -57,6 +57,16 @@ class AuthorisationController:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found")
         return permission
+
+    @staticmethod
+    async def delete_permission(permission_id: int, session: AsyncSession):
+        try:
+            return await authorisation_service.delete_permission(permission_id, session)
+        except PermissionNotFoundException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
+            ) from exc
+
 
     @staticmethod
     async def create_role(role_data: RoleCreate, session: AsyncSession):
@@ -97,11 +107,3 @@ class AuthorisationController:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
         return await authorisation_service.delete_role(role_id, session)
-
-    @staticmethod
-    async def delete_permission(permission_id: int, session: AsyncSession):
-        permission = await authorisation_service.get_permission_by_id(permission_id, session)
-        if not permission:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found")
-        return await authorisation_service.delete_permission(permission_id, session)

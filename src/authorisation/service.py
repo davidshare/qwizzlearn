@@ -72,6 +72,15 @@ class AuthorisationService:
         permission = await session.exec(statement)
         return permission.first()
 
+    async def delete_permission(self, permission_id: int, session: AsyncSession):
+        permission = await self.get_permission_by_id(permission_id, session)
+
+        if permission:
+            await session.delete(permission)
+            await session.commit()
+            return {"message": f"Permission {permission_id} deleted successfully."}
+        return None
+
     async def create_role(self, role_data: RoleCreate, session: AsyncSession):
         new_role = Role(**role_data.model_dump())
         session.add(new_role)
@@ -141,15 +150,4 @@ class AuthorisationService:
             await session.delete(role)
             await session.commit()
             return {"message": f"Role {role_id} deleted successfully."}
-        return None
-
-    async def delete_permission(self, permission_id: int, session: AsyncSession):
-        statement = select(Permission).where(Permission.id == permission_id)
-        result = await session.exec(statement)
-        permission = result.first()
-
-        if permission:
-            await session.delete(permission)
-            await session.commit()
-            return {"message": f"Permission {permission_id} deleted successfully."}
         return None
