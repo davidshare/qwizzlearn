@@ -43,8 +43,8 @@ async def delete_permission(permission_id: int, session: AsyncSession = Depends(
 
 
 @authorisation_router.post("/roles", status_code=status.HTTP_201_CREATED)
-async def create_role(role_data: RoleCreate, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.create_role(role_data, session)
+async def create_role(role_data: List[RoleCreate], user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.create_role(role_data, user, session)
 
 
 @authorisation_router.post("/roles/{role_id}/permissions/{permission_id}", status_code=status.HTTP_200_OK)

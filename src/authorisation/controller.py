@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.authentication.models import User
 from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate
 from .service import AuthorisationService
-from .exceptions import PermissionNotFoundException
+from .exceptions import PermissionNotFoundException, RoleNotFoundException
 
 authorisation_service = AuthorisationService()
 
@@ -67,10 +67,17 @@ class AuthorisationController:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found"
             ) from exc
 
-
     @staticmethod
-    async def create_role(role_data: RoleCreate, session: AsyncSession):
-        return await authorisation_service.create_role(role_data, session)
+    async def create_role(role_data: List[RoleCreate], user: User, session: AsyncSession):
+
+        try:
+            role = await authorisation_service.create_role(role_data, user, session)
+            print("*********************************************", role_data)
+            return role
+        except RoleNotFoundException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found"
+            ) from exc
 
     @staticmethod
     async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession):

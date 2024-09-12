@@ -81,12 +81,39 @@ class AuthorisationService:
             return {"message": f"Permission {permission_id} deleted successfully."}
         return None
 
-    async def create_role(self, role_data: RoleCreate, session: AsyncSession):
-        new_role = Role(**role_data.model_dump())
-        session.add(new_role)
+    async def create_role(self, role_data: RoleCreate, user: User, session: AsyncSession):
+        """
+        Handle creating roles. If a role  exists, return it; if not, create it.
+        """
+        if not user.id:
+            raise ValueError("Please provide a user object with an id")
+
+        existing_roles = []
+        new_roles = []
+
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>> Service roles", role_data)
+
+        for role in role_data:
+            result = await session.exec(
+                select(Role).where(Role.name == role.name)
+            )
+            existing_role = result.first()
+
+            if existing_role:
+                existing_roles.append(existing_role)
+            else:
+                new_role = Role(
+                    **role.model_dump(), created_by=user.id
+                )
+
+                new_roles.append(new_role)
+        session.add_all(new_roles)
         await session.commit()
-        await session.refresh(new_role)
-        return new_role
+
+        for role in new_roles:
+            await session.refresh(role)
+
+        return existing_roles + new_roles
 
     async def assign_permission_to_role(self, role_id: int, permission_id: int, session: AsyncSession):
         statement = select(Role).where(Role.id == role_id)

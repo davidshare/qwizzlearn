@@ -42,9 +42,17 @@ class RoleCreate(BaseModel):
     """
     Schema for creating a new role.
     """
-    action: str
+    name: str
     description: Optional[str] = None
-    created_by: int  # ID of the user who created the role
+
+
+class RoleUpdate(BaseModel):
+    """
+    Schema for updating a role.
+    """
+    name: Optional[str] = None
+    description: Optional[str] = None
+    created_by: Optional[int] = None
 
 
 class RoleResponse(BaseModel):
@@ -52,7 +60,7 @@ class RoleResponse(BaseModel):
     Response schema for a role.
     """
     id: int
-    action: str
+    name: str
     description: Optional[str]
     created_by: Optional[int]
 
@@ -107,11 +115,3 @@ class RolePermissionsResponse(BaseModel):
         Map to orm models
         """
         from_attributes = True
-
-
-class RoleUpdate(BaseModel):
-    """
-    Schema for updating a role.
-    """
-    action: Optional[str] = None
-    description: Optional[str] = None
