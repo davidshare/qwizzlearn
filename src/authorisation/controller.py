@@ -79,6 +79,30 @@ class AuthorisationController:
             ) from exc
 
     @staticmethod
+    async def get_all_roles(session: AsyncSession):
+        return await authorisation_service.get_all_roles(session)
+
+    @staticmethod
+    async def get_role_by_id(role_id: int, session: AsyncSession):
+        try:
+            role = await authorisation_service.get_role_by_id(role_id, session)
+            return role
+        except RoleNotFoundException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found"
+            ) from exc
+
+    @staticmethod
+    async def get_role_by_name(role_name: str, session: AsyncSession):
+        try:
+            role = await authorisation_service.get_role_by_name(role_name, session)
+            return role
+        except RoleNotFoundException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found"
+            ) from exc
+
+    @staticmethod
     async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession):
         role = await authorisation_service.assign_permission_to_role(role_id, permission_id, session)
         if not role:
@@ -87,20 +111,8 @@ class AuthorisationController:
         return role
 
     @staticmethod
-    async def get_role(role_id: int, session: AsyncSession):
-        role = await authorisation_service.get_role(role_id, session)
-        if not role:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-        return role
-
-    @staticmethod
-    async def get_all_roles(session: AsyncSession):
-        return await authorisation_service.get_all_roles(session)
-
-    @staticmethod
     async def update_role(role_id: int, role_data: RoleUpdate, session: AsyncSession):
-        role = await authorisation_service.get_role(role_id, session)
+        role = await authorisation_service.get_role_by_id(role_id, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
@@ -108,7 +120,7 @@ class AuthorisationController:
 
     @staticmethod
     async def delete_role(role_id: int, session: AsyncSession):
-        role = await authorisation_service.get_role(role_id, session)
+        role = await authorisation_service.get_role_by_id(role_id, session)
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")

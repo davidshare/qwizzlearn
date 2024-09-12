@@ -42,31 +42,36 @@ async def delete_permission(permission_id: int, session: AsyncSession = Depends(
     return await AuthorisationController.delete_permission(permission_id, session)
 
 
-@authorisation_router.post("/roles", status_code=status.HTTP_201_CREATED)
+@authorisation_router.post("/roles", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_201_CREATED)
 async def create_role(role_data: List[RoleCreate], user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.create_role(role_data, user, session)
 
 
-@authorisation_router.post("/roles/{role_id}/permissions/{permission_id}", status_code=status.HTTP_200_OK)
-async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.assign_permission_to_role(role_id, permission_id, session)
-
-
-@authorisation_router.get("/roles", status_code=status.HTTP_200_OK)
+@ authorisation_router.get("/roles", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def get_all_roles(session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.get_all_roles(session)
 
 
-@authorisation_router.get("/roles/{role_id}", status_code=status.HTTP_200_OK)
+@ authorisation_router.get("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def get_role(role_id: int, session: AsyncSession = Depends(get_session)):
-    return await AuthorisationController.get_role(role_id, session)
+    return await AuthorisationController.get_role_by_id(role_id, session)
 
 
-@authorisation_router.put("/roles/{role_id}", status_code=status.HTTP_200_OK)
+@ authorisation_router.get("/roles/{role_name}/name", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
+async def get_role_by_name(role_name: str, session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.get_role_by_name(role_name, session)
+
+
+@ authorisation_router.post("/roles/{role_id}/permissions/{permission_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
+async def assign_permission_to_role(role_id: int, permission_id: int, session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.assign_permission_to_role(role_id, permission_id, session)
+
+
+@ authorisation_router.put("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def update_role(role_id: int, role_data: RoleUpdate, session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.update_role(role_id, role_data, session)
 
 
-@authorisation_router.delete("/roles/{role_id}", status_code=status.HTTP_200_OK)
+@ authorisation_router.delete("/roles/{role_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
 async def delete_role(role_id: int, session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.delete_role(role_id, session)
