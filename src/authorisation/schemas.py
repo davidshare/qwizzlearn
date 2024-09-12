@@ -77,7 +77,7 @@ class AssignRoleToUser(BaseModel):
     """
     user_id: int
     role_id: int
-    assigned_by: int  # Track the user who performed the assignment
+    assigned_by: int = None  # Track the user who performed the assignment
 
 
 class UserRolesResponse(BaseModel):

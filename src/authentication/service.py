@@ -31,6 +31,18 @@ class AuthenticationService:
         user = result.first()
         return user
 
+    async def get_user_by_id(self, user_id: int, session: AsyncSession) -> Optional[User]:
+        """
+        Fetch a user by their email address.
+        :param email: Email address of the user.
+        :param session: Async SQLModel session.
+        :return: The user if found, or None.
+        """
+        statement = select(User).where(User.id == user_id)
+        result = await session.exec(statement)
+        user = result.first()
+        return user
+
     async def get_user_by_username(self, username: str, session: AsyncSession) -> Optional[User]:
         """
         Fetch a user by their username.

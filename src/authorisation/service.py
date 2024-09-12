@@ -4,9 +4,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from src.authentication.models import User
-from .models import Role, Permission, RolePermissions
-from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole
+from src.authentication.service import AuthenticationService
+from .models import Role, Permission, RolePermissions, UserRoles
+from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole, AssignRoleToUser
 from .exceptions import PermissionNotFoundException, RoleNotFoundException
+
+authentication_service = AuthenticationService()
 
 
 class AuthorisationService:
@@ -196,8 +199,42 @@ class AuthorisationService:
             if role_permissions:
                 session.add_all(role_permissions)
                 await session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             await session.rollback()
-            return None, "IntegrityError"
+            raise e
 
         return role_permissions, None
+
+    async def assign_roles_to_user(self, roles_data: List[AssignRoleToUser], user: User, session: AsyncSession):
+        user_roles = []
+        for role_data in roles_data:
+            user_id = role_data.user_id
+            role_id = role_data.role_id
+
+            # Check if the role is already assigned to the user
+            statement = select(UserRoles).where(
+                UserRoles.user_id == user_id,
+                UserRoles.role_id == role_id
+            )
+            result = await session.exec(statement)
+            existing_user_role = result.first()
+
+            if not existing_user_role:
+                # Create the UserRoles entry
+                user_role = UserRoles(
+                    user_id=user_id,
+                    role_id=role_id,
+                    assigned_by=user.id
+                )
+                user_roles.append(user_role)
+            else:
+                user_roles.append(existing_user_role)
+        try:
+            if user_roles:
+                session.add_all(user_roles)
+                await session.commit()
+        except IntegrityError as e:
+            await session.rollback()
+            raise e
+
+        return user_roles, None

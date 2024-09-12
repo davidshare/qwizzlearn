@@ -3,9 +3,10 @@ from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.authentication.models import User
-from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole
+from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole, AssignRoleToUser
 from .service import AuthorisationService
 from .exceptions import PermissionNotFoundException, RoleNotFoundException
+from .validators import AuthorisationValidator
 
 authorisation_service = AuthorisationService()
 
@@ -155,3 +156,37 @@ class AuthorisationController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Permission not found") from e
         return role_permissions
+
+    @staticmethod
+    async def assign_roles_to_user(roles_data: List[AssignRoleToUser], user: User, session: AsyncSession):
+        for role_data in roles_data:
+            if not role_data.user_id or not role_data.role_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Both user_id and role_id are required"
+                )
+            if not user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User ID is missing. You need a valid user to assign roles."
+                )
+        await AuthorisationValidator.validate_users_and_roles(roles_data, session)
+        user_roles, error = await authorisation_service.assign_roles_to_user(roles_data, user, session)
+
+        if error == "UserNotFound":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        elif error == "RoleNotFound":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Role not found"
+            )
+        elif error == "IntegrityError":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="One or more roles are already assigned to the user"
+            )
+
+        return user_roles
