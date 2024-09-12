@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.authentication.dependencies import get_current_user
+from src.authentication.dependencies import get_current_user, AccessTokenBearer
 from src.db.main import get_session
 
 from .controller import RolePermissionController
@@ -17,14 +17,14 @@ async def create_permission(permission_data: List[PermissionCreate], user=Depend
     return await RolePermissionController.create_permission(permission_data, user, session)
 
 
+@authorisation_router.get("/permissions", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
+async def get_all_permissions(session: AsyncSession = Depends(get_session)):
+    return await RolePermissionController.get_all_permissions(session)
+
+
 @authorisation_router.get("/permissions/{permission_id}", status_code=status.HTTP_200_OK)
 async def get_permission(permission_id: int, session: AsyncSession = Depends(get_session)):
     return await RolePermissionController.get_permission(permission_id, session)
-
-
-@authorisation_router.get("/permissions", status_code=status.HTTP_200_OK)
-async def get_all_permissions(session: AsyncSession = Depends(get_session)):
-    return await RolePermissionController.get_all_permissions(session)
 
 
 @authorisation_router.put("/permissions/{permission_id}", status_code=status.HTTP_200_OK)

@@ -37,6 +37,11 @@ class AuthorisationService:
 
         return existing_permissions + new_permissions
 
+    async def get_all_permissions(self, session: AsyncSession):
+        statement = select(Permission)
+        result = await session.exec(statement)
+        return result.all()
+
     async def create_role(self, role_data: RoleCreate, session: AsyncSession):
         new_role = Role(**role_data.model_dump())
         session.add(new_role)
@@ -78,7 +83,7 @@ class AuthorisationService:
         role = self.get_role_by_name(role_name, session)
         return role is not None
 
-    async def get_permission(self, permission_id: int, session: AsyncSession):
+    async def get_permission_by_id(self, permission_id: int, session: AsyncSession):
         statement = select(Permission).where(Permission.id == permission_id)
         result = await session.exec(statement)
         return result.first()
@@ -101,12 +106,6 @@ class AuthorisationService:
         statement = select(Role)
         result = await session.exec(statement)
         return result.all()
-
-    async def get_all_permissions(self, session: AsyncSession):
-        statement = select(Permission)
-        result = await session.exec(statement)
-        return result.all()
-    # Existing methods...
 
     async def update_role(self, role_id: int, role_data: RoleUpdate, session: AsyncSession):
         statement = select(Role).where(Role.id == role_id)
