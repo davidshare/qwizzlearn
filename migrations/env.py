@@ -12,6 +12,12 @@ from src.authorisation.models import Role
 from src.authorisation.models import Permission
 from src.authentication.models import User
 from src.difficulty.models import Difficulty
+from src.quizz.models import Quiz
+from src.quizz.models import QuizAttempt
+from src.quizz.models import QuizFeedback
+from src.quizz.models import Quiz
+from src.quizz.models import QuizSettings
+from src.quizz.models import QuizReports
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
