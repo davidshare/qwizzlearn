@@ -9,6 +9,7 @@ class DifficultyCreate(BaseModel):
 
 
 class DifficultyRead(DifficultyCreate):
+    id: int
     created_at: datetime
     updated_at: datetime
 
