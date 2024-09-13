@@ -190,3 +190,26 @@ class AuthorisationController:
             )
 
         return user_roles
+
+    @staticmethod
+    async def revoke_user_roles(user_id: int, role_ids: List[int], session: AsyncSession):
+        if not role_ids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Role IDs are required"
+            )
+
+        user_roles, error = await authorisation_service.revoke_user_roles(user_id, role_ids, session)
+
+        if error == "RolesNotFound":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="One or more roles not found for the user"
+            )
+        elif error:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An error occurred while revoking roles"
+            )
+
+        return user_roles

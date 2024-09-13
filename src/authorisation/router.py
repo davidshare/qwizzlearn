@@ -80,3 +80,8 @@ async def assign_permission_to_role(permissions_data: List[AssignPermissionToRol
 @ authorisation_router.post("/roles/users", status_code=status.HTTP_200_OK)
 async def assign_role_to_user(roles_data: List[AssignRoleToUser], user=Depends(get_current_user), session: AsyncSession = Depends(get_session)):
     return await AuthorisationController.assign_roles_to_user(roles_data, user, session)
+
+
+@ authorisation_router.delete("/roles/users/{user_id}", dependencies=[Depends(AccessTokenBearer())], status_code=status.HTTP_200_OK)
+async def revoke_user_roles(user_id: int, role_ids: List[int], session: AsyncSession = Depends(get_session)):
+    return await AuthorisationController.revoke_user_roles(user_id, role_ids, session)
