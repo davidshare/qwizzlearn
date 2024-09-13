@@ -264,3 +264,25 @@ class AuthorisationService:
             raise e
 
         return user_roles, None
+
+    async def revoke_role_permissions(self, role_id: int, permission_ids: List[int], session: AsyncSession):
+        statement = select(RolePermissions).where(
+            RolePermissions.role_id==role_id,
+            RolePermissions.permission_id.in_(permission_ids)
+        )
+
+        result = await session.exec(statement)
+        role_permissions = result.all()
+
+        if not role_permissions:
+            return None, "RolesNotFound"
+
+        try:
+            for role_permission in role_permissions:
+                await session.delete(role_permission)
+            await session.commit()
+        except IntegrityError as e:
+            await session.rollback()
+            raise e
+
+        return role_permissions, None
