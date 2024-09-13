@@ -14,7 +14,6 @@ class AuthorisationValidator:
     @staticmethod
     async def validate_users_and_roles(data: List[Dict[str, int]], session: AsyncSession):
         # Extract unique user_ids and role_ids
-        print("=========================================>>>>>>>>>>>> data: ", data)
         user_ids = list(set(item.user_id for item in data))
         role_ids = list(set(item.role_id for item in data))
 

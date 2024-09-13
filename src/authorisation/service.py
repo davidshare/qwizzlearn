@@ -1,13 +1,17 @@
 from typing import List
-from sqlmodel.ext.asyncio.session import AsyncSession
+
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.authentication.models import User
 from src.authentication.service import AuthenticationService
-from .models import Role, Permission, RolePermissions, UserRoles
-from .schemas import RoleCreate, PermissionCreate, RoleUpdate, PermissionUpdate, AssignPermissionToRole, AssignRoleToUser
+
 from .exceptions import PermissionNotFoundException, RoleNotFoundException
+from .models import Permission, Role, RolePermissions, UserRoles
+from .schemas import (AssignPermissionToRole, AssignRoleToUser,
+                      PermissionCreate, PermissionUpdate, RoleCreate,
+                      RoleUpdate)
 
 authentication_service = AuthenticationService()
 
@@ -233,6 +237,28 @@ class AuthorisationService:
             if user_roles:
                 session.add_all(user_roles)
                 await session.commit()
+        except IntegrityError as e:
+            await session.rollback()
+            raise e
+
+        return user_roles, None
+
+    async def revoke_user_roles(self, user_id: int, role_ids: List[int], session: AsyncSession):
+        # Fetch the user roles to be revoked
+        statement = select(UserRoles).where(
+            UserRoles.user_id == user_id,
+            UserRoles.role_id.in_(role_ids)
+        )
+        result = await session.exec(statement)
+        user_roles = result.all()
+
+        if not user_roles:
+            return None, "RolesNotFound"
+
+        try:
+            for user_role in user_roles:
+                await session.delete(user_role)
+            await session.commit()
         except IntegrityError as e:
             await session.rollback()
             raise e
