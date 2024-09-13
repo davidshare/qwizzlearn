@@ -1,10 +1,11 @@
-from typing import Optional, List
-from pydantic import BaseModel
-from datetime import datetime
+from typing import List
+
 from fastapi import APIRouter, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from src.authentication.dependencies import AccessTokenBearer
 from src.db.main import get_session
+
 from .controller import DifficultyController
 from .schemas import DifficultyCreate, DifficultyRead, DifficultyUpdate
 
