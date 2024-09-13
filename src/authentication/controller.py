@@ -98,18 +98,20 @@ class AuthenticationController:
             valid_pass = verify_password(password, user.password_hash)
 
             if valid_pass:
+                role = [role.id for role in user.roles]
                 access_token = create_access_token(
                     user_data={
                         'email': user.email,
                         'id': user.id,
-                        'role': user.roles
+                        'role': role
                     }
                 )
 
                 refresh_token = create_access_token(
                     user_data={
                         'email': user.email,
-                        'id': user.id
+                        'id': user.id,
+                        'role': role
                     },
                     refresh=True,
                     expiry=timedelta(days=REFRESH_TOKEN_EXPIRY))

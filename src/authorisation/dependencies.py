@@ -1,7 +1,5 @@
 from typing import Callable
-
 from fastapi import Depends, HTTPException, Request
-
 from src.authentication.dependencies import get_current_user
 from src.authentication.models import User
 
@@ -26,11 +24,11 @@ async def authorize(
     user_permissions = set()
     for role in current_user.roles:
         for permission in role.permissions:
-            user_permissions.add(permission)
+            user_permissions.add((permission.action, permission.is_owner_only))
 
-    for permission in user_permissions:
-        if permission.action == action:
-            if permission.is_owner_only:
+    for perm_action, is_owner_only in user_permissions:
+        if perm_action == action:
+            if is_owner_only:
                 owner_id = request.path_params.get("user_id")
                 if owner_id is None:
                     raise HTTPException(
@@ -42,7 +40,8 @@ async def authorize(
 
             return True
 
-    raise HTTPException(status_code=403, detail="Not authorized")
+    raise HTTPException(
+        status_code=403, detail="Not authorized: You don't have the permission to access this result. Please contact your admin.")
 
 
 def check_ownership(user_id: int, owner_id: str) -> bool:
