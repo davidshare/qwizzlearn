@@ -1,9 +1,12 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Column, Relationship
 from sqlalchemy import Index
 import sqlalchemy.dialects.postgresql as pg
+
 from src.authorisation.models import Role, UserRoles
+from src.groups.models.group import Group
+from src.groups.models.group_user import GroupUser
 
 
 class User(SQLModel, table=True):
@@ -47,6 +50,8 @@ class User(SQLModel, table=True):
 
     roles: List[Role] = Relationship(back_populates="users", link_model=UserRoles, sa_relationship_kwargs={
         'lazy': 'selectin'})
+    groups: List["Group"] = Relationship(
+        back_populates="users", link_model=GroupUser, sa_relationship_kwargs={"lazy": "selectin"})
 
     created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now))

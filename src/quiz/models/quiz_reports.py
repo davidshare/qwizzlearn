@@ -7,7 +7,8 @@ class QuizReports(SQLModel, table=True):
     __tablename__ = "quiz_reports"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    quiz_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    quiz_id: Optional[int] = Field(
+        default=None, foreign_key="quizzes.id", primary_key=True)
     average_score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))
     median_score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))
     standard_deviation: float = Field(

@@ -15,6 +15,10 @@ async def authorize(
     request: Request,
     current_user: User = Depends(get_current_user),
 ):
+
+    if any(role.name == 'system_admin' for role in current_user.roles):
+        return True
+
     route = request.scope.get("route")
     if not route or not hasattr(route.endpoint, "action"):
         raise HTTPException(status_code=500, detail="Route action not defined")

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
+from .group_user import GroupUserRead
 
 
 class GroupBase(BaseModel):
@@ -10,7 +11,7 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    created_by: int
+    pass
 
 
 class GroupRead(GroupBase):

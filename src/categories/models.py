@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 
 
@@ -18,3 +18,5 @@ class Category(SQLModel, table=True):
         pg.TIMESTAMP, nullable=False, onupdate=datetime.now))
     is_active: bool = Field(
         default=True, sa_column=Column(pg.BOOLEAN, nullable=False))
+
+    questions: List["Question"] = Relationship(back_populates="category")

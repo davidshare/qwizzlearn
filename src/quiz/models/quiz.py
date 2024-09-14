@@ -2,13 +2,15 @@ from typing import Optional, List
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship, Column
 import sqlalchemy.dialects.postgresql as pg
+from src.tags.models.quiz_tag_link import QuizTagLink
 
 
 class Quiz(SQLModel, table=True):
     __tablename__ = "quizzes"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    user_id: Optional[int] = Field(
+        default=None, foreign_key="users.id", primary_key=True)
     title: str = Field(sa_column=Column(pg.VARCHAR(255), nullable=False))
     description: Optional[str] = Field(default=None, sa_column=Column(pg.TEXT))
     slug: str = Field(sa_column=Column(
@@ -17,7 +19,8 @@ class Quiz(SQLModel, table=True):
         default=None, sa_column=Column(pg.INTEGER, nullable=True))
     max_questions: Optional[int] = Field(
         default=None, sa_column=Column(pg.INTEGER, nullable=True))
-    difficulty: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    difficulty: Optional[int] = Field(
+        default=None, foreign_key="difficulties.id", primary_key=True)
     time_limit: Optional[int] = Field(
         default=None, sa_column=Column(pg.INTEGER, nullable=True))
     published: bool = Field(
@@ -40,3 +43,7 @@ class Quiz(SQLModel, table=True):
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
     schedules: List["QuizSchedule"] = Relationship(
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
+    questions: List["QuizQuestion"] = Relationship(
+        back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
+    tags: List["Tag"] = Relationship(
+        back_populates="quizzes", link_model=QuizTagLink)
