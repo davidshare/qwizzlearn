@@ -8,6 +8,7 @@ from src.db.main import db_init
 from src.authentication.router import authentication_router
 from src.authorisation.router import authorisation_router
 from src.difficulty.router import difficulty_router
+from src.categories.router import category_router
 
 
 @asynccontextmanager
@@ -40,3 +41,5 @@ app.include_router(
     authorisation_router, prefix='/api/{VERSION}/authorisation', tags=['authorisation'])
 app.include_router(
     difficulty_router, prefix='/api/{VERSION}/difficulties', tags=['difficulty'])
+app.include_router(
+    category_router, prefix='/api/{VERSION}/categories', tags=['category'])

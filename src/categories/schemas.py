@@ -9,7 +9,7 @@ class CategoryBase(BaseModel):
 
 
 class CategoryCreate(CategoryBase):
-    created_by: int
+    pass
 
 
 class CategoryRead(CategoryBase):
