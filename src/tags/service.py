@@ -2,7 +2,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import func
 from sqlmodel import select
 from .schemas import TagCreate, TagRead, TagUpdate
-from .models import Tag
+from .models.tags import Tag
 
 
 class TagService:

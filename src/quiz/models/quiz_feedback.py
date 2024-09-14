@@ -7,7 +7,8 @@ class QuizFeedback(SQLModel, table=True):
     __tablename__ = "quiz_feedback"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    quiz_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    quiz_id: Optional[int] = Field(
+        default=None, foreign_key="quizzes.id", primary_key=True)
     feedback_text: str = Field(sa_column=Column(pg.TEXT, nullable=False))
     min_score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))
     max_score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))

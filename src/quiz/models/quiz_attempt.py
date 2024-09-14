@@ -1,15 +1,21 @@
-from typing import Optional
+from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship, Column
 import sqlalchemy.dialects.postgresql as pg
+from .quiz_progress import QuizProgress
+
+if TYPE_CHECKING:
+    from src.questions.models.question_time_tracking import QuestionTimeTracking
 
 
 class QuizAttempt(SQLModel, table=True):
     __tablename__ = "quiz_attempts"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    quiz_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
-    user_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    quiz_id: Optional[int] = Field(
+        default=None, foreign_key="quizzes.id", primary_key=True)
+    user_id: Optional[int] = Field(
+        default=None, foreign_key="users.id", primary_key=True)
     attempt_number: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
     score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))
     started_at: datetime = Field(
@@ -24,3 +30,8 @@ class QuizAttempt(SQLModel, table=True):
     # Relationships
     quiz: "Quiz" = Relationship(
         back_populates="attempts", sa_relationship_kwargs={"lazy": "selectin"})
+    quiz_progress_entries: List[QuizProgress] = Relationship(
+        back_populates="quiz_attempt", sa_relationship_kwargs={"lazy": "selectin"})
+    question_time_trackings: List["QuestionTimeTracking"] = Relationship(
+        back_populates="quiz_attempt", sa_relationship_kwargs={"lazy": "selectin"}
+    )

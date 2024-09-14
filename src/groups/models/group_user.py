@@ -17,7 +17,3 @@ class GroupUser(SQLModel, table=True):
     role: str = Field(sa_column=Column(pg.VARCHAR(100), nullable=False))
     joined_at: datetime = Field(
         default_factory=datetime.now, sa_column=Column(pg.TIMESTAMP, nullable=False))
-
-    # Relationships
-    group: "Group" = Relationship(back_populates="users")
-    user: "User" = Relationship(back_populates="groups")

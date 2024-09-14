@@ -6,7 +6,8 @@ class QuizSettings(SQLModel, table=True):
     __tablename__ = "quiz_settings"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    quiz_id: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
+    quiz_id: Optional[int] = Field(
+        default=None, foreign_key="quizzes.id", primary_key=True)
     browser_security: str = Field(
         sa_column=Column(pg.VARCHAR(255), nullable=False))
     shuffle_questions: bool = Field(

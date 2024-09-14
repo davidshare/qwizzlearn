@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field, Column
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 
 
@@ -14,3 +14,5 @@ class Difficulty(SQLModel, table=True):
         pg.TIMESTAMP, default=datetime.now))
     updated_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now()))
+
+    questions: List["Question"] = Relationship(back_populates="difficulty")
