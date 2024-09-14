@@ -10,7 +10,7 @@ class TagBase(BaseModel):
 
 
 class TagCreate(TagBase):
-    created_by: int
+    pass
 
 
 class TagRead(TagBase):
