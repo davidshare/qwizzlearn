@@ -15,10 +15,10 @@ class GroupService:
                 select(Group).where(
                     Group.name == group.name)
             )
-            existing_category = result.first()
+            existing_group = result.first()
 
-            if existing_category:
-                existing_groups.append(existing_category)
+            if existing_group:
+                existing_groups.append(existing_group)
             else:
                 new_group = Group(
                     **group.model_dump(), created_by=user_id)

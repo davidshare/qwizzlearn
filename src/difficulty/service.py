@@ -58,3 +58,4 @@ class DifficultyService:
         await session.delete(difficulty)
         await session.commit()
         return True
+
