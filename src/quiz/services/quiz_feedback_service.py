@@ -22,7 +22,7 @@ class QuizFeedbackService:
             await session.refresh(new_quiz_feedback)
 
         except Exception as e:
-            print(f"Error refreshing quiz instance: {e}")
+            print(f"Error refreshing quiz feedback instance: {e}")
 
         return new_quiz_feedback
 

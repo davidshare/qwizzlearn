@@ -1,17 +1,61 @@
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy import func
 from sqlmodel import select
-from ..schemas import QuizProgressCreate, QuizProgressRead, QuizProgressUpdate
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from ..models import QuizProgress
+from ..schemas import QuizProgressCreate, QuizProgressRead, QuizProgressUpdate
+from .quiz_service import QuizService
+from .quiz_attempt_service import QuizAttemptService
+from ..exceptions import QuizNotFoundException, QuizAttemptNotFoundException
+
+quiz_attempt_service = QuizAttemptService()
+quiz_service = QuizService()
 
 
 class QuizProgressService:
-    async def create_quiz_progress(self, quiz_progress_data: QuizProgressCreate, user_id: int, session: AsyncSession) -> QuizProgressRead:
+    """Handle all database operations for the quiz progress
+    """
+
+    async def create_quiz_progress(
+            self,
+            quiz_progress_data: QuizProgressCreate,
+            user_id: int,
+            session: AsyncSession
+    ) -> QuizProgressRead:
+        """Create a new record for quiz progress
+
+        Args:
+            quiz_progress_data (QuizProgressCreate): input data for quiz progress
+            user_id (int): user creating the progress
+            session (AsyncSession): session for storing data
+
+        Raises:
+            QuizAttemptNotFoundException: exception raised when quiz attempt is not found
+            QuizNotFoundException: exception raised when the quiz is not found
+
+        Returns:
+            QuizProgressRead: the output of creating the quiz progress
+        """
+
+        if not await quiz_attempt_service.get_quiz_attempt_by_id(
+            quiz_progress_data.quiz_attempt_id, session
+        ):
+            raise QuizAttemptNotFoundException(f"No quiz attempt with the id {
+                quiz_progress_data.quiz_id} exists")
+
+        # TODO: THIS SHOULD BE A QUESTION NOT A QUIZ. FIX IT AFTER CREATING THE QUESTION MODULE
+        if not await quiz_service.get_quiz_by_id(quiz_progress_data.quiz_id, session):
+            raise QuizNotFoundException(f"No quiz with the id {
+                quiz_progress_data.quiz_id} exists")
+
         new_quiz_progress = QuizProgress(
             **quiz_progress_data.model_dump(), user_id=user_id)
-        session.add(new_quiz_progress)
-        await session.commit()
-        await session.refresh(new_quiz_progress)
+
+        try:
+            session.add(new_quiz_progress)
+            await session.commit()
+            await session.refresh(new_quiz_progress)
+        except Exception as e:
+            print(f"Error refreshing quiz progress instance: {e}")
         return new_quiz_progress
 
     async def get_quiz_progress_by_id(self, quiz_progress_id: int, session: AsyncSession) -> QuizProgressRead:

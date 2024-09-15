@@ -21,8 +21,8 @@ class QuizProgressRead(QuizProgressBase):
 
 
 class QuizProgressUpdate(BaseModel):
-    quiz_attempt_id: Optional[int]
-    question_id: Optional[int]
-    time_spent: Optional[int]
-    answered: Optional[bool]
-    skipped: Optional[bool]
+    quiz_attempt_id: Optional[int] = None
+    question_id: Optional[int] = None
+    time_spent: Optional[int] = None
+    answered: Optional[bool] = None
+    skipped: Optional[bool] = None
