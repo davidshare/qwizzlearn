@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 import logging
@@ -7,8 +6,12 @@ from src.db.main import get_session
 from src.authentication.models import User
 from ..services import QuizAttemptService
 from ..schemas import QuizAttemptCreate, QuizAttemptRead, QuizAttemptUpdate
+from ..services.quiz_service import QuizService
+from ..exceptions import DuplicateQuizAttemptException
+
 
 logger = logging.getLogger(__name__)
+quiz_service = QuizService()
 
 quiz_attempt_service = QuizAttemptService()
 
@@ -22,7 +25,19 @@ class QuizAttemptController:
                 detail="User ID is missing. You need a valid user to create a quiz attempt."
             )
 
-        return await quiz_attempt_service.create_quiz_attempt(quiz_attempt_data, user.id, session)
+        if not await quiz_service.get_quiz_by_id(quiz_attempt_data.quiz_id, session):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"The quiz with id {
+                    quiz_attempt_data.quiz_id} does not exist"
+            )
+
+        try:
+            return await quiz_attempt_service.create_quiz_attempt(quiz_attempt_data, user.id, session)
+        except DuplicateQuizAttemptException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Quiz attempt already exists"
+            ) from exc
 
     @staticmethod
     async def get_quiz_attempt_by_id(quiz_attempt_id: int, session: AsyncSession = Depends(get_session)):

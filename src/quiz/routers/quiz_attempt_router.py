@@ -31,13 +31,6 @@ async def get_all_quiz_attempts(session: AsyncSession = Depends(get_session)):
 async def get_quiz_attempt_by_id(quiz_attempt_id: int, session: AsyncSession = Depends(get_session)):
     return await QuizAttemptController.get_quiz_attempt_by_id(quiz_attempt_id, session)
 
-
-@route_with_action('update_quiz_attempt')
-@quiz_attempt_router.put("/{quiz_attempt_id}", dependencies=[Depends(access_token_bearer), Depends(authorize)], status_code=status.HTTP_200_OK, response_model=QuizAttemptRead)
-async def update_quiz_attempt(quiz_attempt_id: int, quiz_attempt_data: QuizAttemptUpdate, session: AsyncSession = Depends(get_session)):
-    return await QuizAttemptController.update_quiz_attempt(quiz_attempt_id, quiz_attempt_data, session)
-
-
 @route_with_action('delete_quiz_attempt')
 @quiz_attempt_router.delete("/{quiz_attempt_id}", dependencies=[Depends(access_token_bearer), Depends(authorize)], status_code=status.HTTP_204_NO_CONTENT)
 async def delete_quiz_attempt(quiz_attempt_id: int, session: AsyncSession = Depends(get_session)):

@@ -3,6 +3,9 @@ from fastapi import HTTPException
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.difficulty.service import Difficulty
+from src.quiz.services.quiz_service import QuizService
+
+quiz_service = QuizService()
 
 
 class QuizValidator:

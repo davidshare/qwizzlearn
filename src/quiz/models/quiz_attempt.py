@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship, Column
+from sqlmodel import SQLModel, Field, Relationship, Column, UniqueConstraint
 import sqlalchemy.dialects.postgresql as pg
 from .quiz_progress import QuizProgress
 
@@ -12,10 +12,8 @@ class QuizAttempt(SQLModel, table=True):
     __tablename__ = "quiz_attempts"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    quiz_id: Optional[int] = Field(
-        default=None, foreign_key="quizzes.id", primary_key=True)
-    user_id: Optional[int] = Field(
-        default=None, foreign_key="users.id", primary_key=True)
+    quiz_id: Optional[int] = Field(default=None, foreign_key="quizzes.id")
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id")
     attempt_number: int = Field(sa_column=Column(pg.INTEGER, nullable=False))
     score: float = Field(sa_column=Column(pg.FLOAT, nullable=False))
     started_at: datetime = Field(
@@ -26,6 +24,9 @@ class QuizAttempt(SQLModel, table=True):
         default=False, sa_column=Column(pg.BOOLEAN, nullable=False))
     created_at: datetime = Field(
         default_factory=datetime.now, sa_column=Column(pg.TIMESTAMP, nullable=False))
+
+    __table_args__ = (UniqueConstraint("user_id", "quiz_id",
+                                       "attempt_number", name="uq_quiz_attempt_user_quiz"),)
 
     # Relationships
     quiz: "Quiz" = Relationship(
