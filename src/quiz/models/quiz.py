@@ -10,7 +10,7 @@ class Quiz(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(
-        default=None, foreign_key="users.id", primary_key=True)
+        default=None, foreign_key="users.id")
     title: str = Field(sa_column=Column(pg.VARCHAR(255), nullable=False))
     description: Optional[str] = Field(default=None, sa_column=Column(pg.TEXT))
     slug: str = Field(sa_column=Column(
@@ -20,17 +20,17 @@ class Quiz(SQLModel, table=True):
     max_questions: Optional[int] = Field(
         default=None, sa_column=Column(pg.INTEGER, nullable=True))
     difficulty: Optional[int] = Field(
-        default=None, foreign_key="difficulties.id", primary_key=True)
+        default=None, foreign_key="difficulties.id")
     time_limit: Optional[int] = Field(
         default=None, sa_column=Column(pg.INTEGER, nullable=True))
     published: bool = Field(
         default=False, sa_column=Column(pg.BOOLEAN, nullable=False))
     published_at: datetime = Field(
-        default_factory=datetime.now, sa_column=Column(pg.TIMESTAMP, nullable=False))
-    created_at: datetime = Field(
-        default_factory=datetime.now, sa_column=Column(pg.TIMESTAMP, nullable=False))
-    updated_at: datetime = Field(default_factory=datetime.now, sa_column=Column(
-        pg.TIMESTAMP, nullable=False, onupdate=datetime.now))
+        default=datetime.now(), sa_column=Column(pg.TIMESTAMP, nullable=False))
+    created_at: datetime = Field(sa_column=Column(
+        pg.TIMESTAMP, default=datetime.now))
+    updated_at: datetime = Field(sa_column=Column(
+        pg.TIMESTAMP, default=datetime.now, onupdate=datetime.now))
 
     # Relationships
     attempts: List["QuizAttempt"] = Relationship(
@@ -39,7 +39,7 @@ class Quiz(SQLModel, table=True):
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
     settings: Optional["QuizSettings"] = Relationship(
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
-    reports: Optional["QuizReports"] = Relationship(
+    reports: Optional["QuizReport"] = Relationship(
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})
     schedules: List["QuizSchedule"] = Relationship(
         back_populates="quiz", sa_relationship_kwargs={"lazy": "selectin"})

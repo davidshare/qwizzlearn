@@ -5,16 +5,12 @@ from pydantic import BaseModel
 
 # Quiz Schemas
 class QuizBase(BaseModel):
-    user_id: int
     title: str
-    description: Optional[str]
-    slug: str
-    max_scores: Optional[int]
-    max_questions: Optional[int]
-    difficulty: int
-    time_limit: Optional[int]
-    published: bool
-    published_at: Optional[datetime]
+    description: Optional[str] = None
+    max_scores: Optional[int] = None
+    max_questions: Optional[int] = None
+    difficulty: int = None
+    time_limit: Optional[int] = None
 
 
 class QuizCreate(QuizBase):
@@ -23,20 +19,25 @@ class QuizCreate(QuizBase):
 
 class QuizRead(QuizBase):
     id: int
+    user_id: int
+    slug: str
+    published: bool = False
+    published_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class QuizUpdate(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    slug: Optional[str]
-    max_scores: Optional[int]
-    max_questions: Optional[int]
-    difficulty: Optional[int]
-    time_limit: Optional[int]
-    published: Optional[bool]
-    published_at: Optional[datetime]
+    user_id: Optional[int] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    slug: Optional[str] = None
+    max_scores: Optional[int] = None
+    max_questions: Optional[int] = None
+    difficulty: Optional[int] = None
+    time_limit: Optional[int] = None
+    published: Optional[bool] = None
+    published_at: Optional[datetime] = None
