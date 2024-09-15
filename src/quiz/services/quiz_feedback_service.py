@@ -1,17 +1,29 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy import func
 from sqlmodel import select
 from ..schemas import QuizFeedbackCreate, QuizFeedbackRead, QuizFeedbackUpdate
 from ..models import QuizFeedback
+from ..exceptions import QuizNotFoundException
+
+from .quiz_service import QuizService
+
+quiz_service = QuizService()
 
 
 class QuizFeedbackService:
     async def create_quiz_feedback(self, quiz_feedback_data: QuizFeedbackCreate, user_id: int, session: AsyncSession) -> QuizFeedbackRead:
+        if not await quiz_service.get_quiz_by_id(quiz_feedback_data.quiz_id, session):
+            raise QuizNotFoundException(f"No quiz with the id {
+                                        quiz_feedback_data.quiz_id} exists")
         new_quiz_feedback = QuizFeedback(
             **quiz_feedback_data.model_dump(), user_id=user_id)
-        session.add(new_quiz_feedback)
-        await session.commit()
-        await session.refresh(new_quiz_feedback)
+        try:
+            session.add(new_quiz_feedback)
+            await session.commit()
+            await session.refresh(new_quiz_feedback)
+
+        except Exception as e:
+            print(f"Error refreshing quiz instance: {e}")
+
         return new_quiz_feedback
 
     async def get_quiz_feedback_by_id(self, quiz_feedback_id: int, session: AsyncSession) -> QuizFeedbackRead:

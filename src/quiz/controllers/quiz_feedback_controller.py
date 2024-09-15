@@ -1,12 +1,14 @@
-from typing import List
-from fastapi import Depends, HTTPException, status
-from sqlmodel.ext.asyncio.session import AsyncSession
 import logging
 
-from src.db.main import get_session
+from fastapi import Depends, HTTPException, status
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from src.authentication.models import User
-from ..services import QuizFeedbackService
+from src.db.main import get_session
+
+from ..exceptions import QuizNotFoundException
 from ..schemas import QuizFeedbackCreate, QuizFeedbackRead, QuizFeedbackUpdate
+from ..services import QuizFeedbackService
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +17,21 @@ quiz_feedback_service = QuizFeedbackService()
 
 class QuizFeedbackController:
     @staticmethod
-    async def create_quiz_feedback(quiz_feedback_data: QuizFeedbackCreate, user: User, session: AsyncSession = Depends(get_session)) -> QuizFeedbackRead:
+    async def create_quiz_feedback(feedback_data: QuizFeedbackCreate, user: User, session: AsyncSession = Depends(get_session)) -> QuizFeedbackRead:
         if not user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User ID is missing. You need a valid user to create quiz feedback."
             )
 
-        return await quiz_feedback_service.create_quiz_feedback(quiz_feedback_data, user.id, session)
+        try:
+            return await quiz_feedback_service.create_quiz_feedback(feedback_data, user.id, session)
+        except QuizNotFoundException as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"The quizz with the id {
+                    feedback_data.quiz_id} does not exist."
+            ) from e
 
     @staticmethod
     async def get_quiz_feedback_by_id(quiz_feedback_id: int, session: AsyncSession = Depends(get_session)):

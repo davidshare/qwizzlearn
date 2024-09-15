@@ -24,6 +24,7 @@ class QuizFeedbackRead(QuizFeedbackBase):
 
 
 class QuizFeedbackUpdate(BaseModel):
-    feedback_text: Optional[str]
-    min_score: Optional[float]
-    max_score: Optional[float]
+    quiz_id: Optional[int] = None
+    feedback_text: Optional[str] = None
+    min_score: Optional[float] = None
+    max_score: Optional[float] = None
