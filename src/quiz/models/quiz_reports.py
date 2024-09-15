@@ -3,7 +3,8 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship, Column
 import sqlalchemy.dialects.postgresql as pg
 
-class QuizReports(SQLModel, table=True):
+
+class QuizReport(SQLModel, table=True):
     __tablename__ = "quiz_reports"
 
     id: Optional[int] = Field(default=None, primary_key=True)

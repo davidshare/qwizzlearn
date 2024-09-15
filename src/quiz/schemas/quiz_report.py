@@ -3,26 +3,26 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class QuizReportsBase(BaseModel):
+class QuizReportBase(BaseModel):
     quiz_id: int
     average_score: float
     median_score: float
     standard_deviation: float
 
 
-class QuizReportsCreate(QuizReportsBase):
+class QuizReportCreate(QuizReportBase):
     pass
 
 
-class QuizReportsRead(QuizReportsBase):
+class QuizReportRead(QuizReportBase):
     id: int
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
-class QuizReportsUpdate(BaseModel):
+class QuizReportUpdate(BaseModel):
     average_score: Optional[float]
     median_score: Optional[float]
     standard_deviation: Optional[float]
