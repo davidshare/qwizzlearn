@@ -16,7 +16,7 @@ from src.quiz.models.quiz import Quiz
 from src.quiz.models.quiz_attempt import QuizAttempt
 from src.quiz.models.quiz_feedback import QuizFeedback
 from src.quiz.models.quiz_settings import QuizSettings
-from src.quiz.models.quiz_reports import QuizReports
+from src.quiz.models.quiz_reports import QuizReport
 from src.quiz.models.quiz_progress import QuizProgress
 from src.quiz.models.quiz_schedule import QuizSchedule
 from src.categories.models import Category
