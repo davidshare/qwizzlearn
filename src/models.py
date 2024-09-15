@@ -1,7 +1,7 @@
 from .authorisation.models import Role, Permission, RolePermissions, UserRoles
 from .authentication.models import User
 from .difficulty.models import Difficulty
-from .quiz.models import Quiz, QuizAttempt, QuizFeedback, QuizReports, QuizSettings, QuizSchedule
+from .quiz.models import Quiz, QuizAttempt, QuizFeedback, QuizReport, QuizSettings, QuizSchedule
 
 from .categories.models import Category
 from .groups.models import Group
@@ -21,7 +21,7 @@ Question.model_rebuild()
 Quiz.model_rebuild()
 QuizAttempt.model_rebuild()
 QuizFeedback.model_rebuild()
-QuizReports.model_rebuild()
+QuizReport.model_rebuild()
 QuizSettings.model_rebuild()
 QuizSchedule.model_rebuild()  # Added this line
 Tag.model_rebuild()
@@ -37,6 +37,6 @@ QuestionTimeTracking.model_rebuild()
 __all__ = [
     "User", "UserRoles", "RolePermissions", "Role", "Permission",
     "Difficulty", "Question", "Quiz", "QuizAttempt", "QuizFeedback",
-    "QuizReports", "QuizSettings", "Tag", "Category", "QuizQuestion",
+    "QuizReport", "QuizSettings", "Tag", "Category", "QuizQuestion",
     "QuizSchedule", "QuizTagLink", "QuestionTagLink", "Group", "QuestionTimeTracking"
 ]

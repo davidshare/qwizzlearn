@@ -11,6 +11,7 @@ from src.difficulty.router import difficulty_router
 from src.categories.router import category_router
 from src.tags.router import tag_router
 from src.groups.router import group_router
+from src.quiz.routers import quizzes_router
 
 
 @asynccontextmanager
@@ -49,3 +50,5 @@ app.include_router(
     tag_router, prefix='/api/{VERSION}/tags', tags=['tag'])
 app.include_router(
     group_router, prefix='/api/{VERSION}/groups', tags=['group'])
+app.include_router(
+    quizzes_router, prefix='/api/{VERSION}/quizzes', tags=['quizzes'])
