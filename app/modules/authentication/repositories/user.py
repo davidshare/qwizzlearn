@@ -1,7 +1,8 @@
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from app.core.exceptions import DuplicateEntryException
+from app.core.exceptions import DuplicateEntryException, NotFoundException
 from ..models.user import User
+from ..models.token import Token
 
 
 class UserRepository:
@@ -30,3 +31,21 @@ class UserRepository:
         await self.session.commit()  # Use await for async commit
         await self.session.refresh(user)  # Use await for async refresh
         return user
+
+    async def get_user_by_username(self, username: str) -> User:
+        """Retrieve a user by their username."""
+        statement = select(User).where(User.username == username)
+        result = await self.session.exec(statement)
+        user = result.first()
+        if not user:
+            raise NotFoundException("User not found")
+        return user
+
+    async def get_token_by_refresh_token(self, refresh_token: str) -> Token:
+        """Retrieve a token by its refresh token."""
+        statement = select(Token).where(Token.refresh_token == refresh_token)
+        result = await self.session.exec(statement)
+        token = result.first()
+        if not token:
+            raise NotFoundException("Refresh token not found")
+        return token
