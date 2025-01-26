@@ -5,7 +5,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import config
-from app.core.db import db_init
+from app.core.database import db_init
+from app.core.exceptions import (
+    DuplicateEntryException,
+    InternalServerException,
+    ValidationException
+)
+from app.core.middleware import (
+    duplicate_entry_handler,
+    internal_server_error_handler,
+    validation_exception_handler
+)
+
+from app.modules.authentication.routes.v1 import authentication_routers
 
 load_dotenv()
 
@@ -27,6 +39,12 @@ origins = [
     config.FRONTEND_ORIGIN
 ]
 
+app.add_exception_handler(ValidationException, validation_exception_handler)
+app.add_exception_handler(DuplicateEntryException, duplicate_entry_handler)
+app.add_exception_handler(
+    InternalServerException, internal_server_error_handler
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -36,11 +54,16 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to qwizzlearn api!!!"}
+
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to qwizzlearn api!!!"}
+app.include_router(
+    authentication_routers, prefix='/api/v1/auth', tags=['authentication']
+)
