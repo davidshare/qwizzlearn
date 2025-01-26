@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.database import get_session
-from app.core.exceptions import ValidationException
+from app.core.exceptions import ValidationException, UnauthorizedException
 
 from ...repositories.user import UserRepository
 from ...schemas.user import UserCreate, UserResponse
 from ...services.auth import AuthService
+
+from ...schemas.login import LoginRequest, LoginResponse
+from ...schemas.token import TokenRefresh, TokenResponse
 
 auth_router = APIRouter()
 
@@ -20,6 +23,55 @@ async def register_user(user_data: UserCreate, session: AsyncSession = Depends(g
         return await auth_service.register_user(user_data)
     except HTTPException as e:
         raise e
+    except Exception as e:
+        raise ValidationException(
+            detail={
+                "message": "Validation error",
+                "errors": str(e),
+                "documentation_url": "https://api.example.com/docs"
+            }
+        ) from e
+
+
+@auth_router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
+async def login(
+    login_data: LoginRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session)
+):
+    user_repository = UserRepository(session)
+    auth_service = AuthService(user_repository)
+
+    device_info = request.headers.get("User-Agent", "Unknown Device")
+
+    try:
+        return await auth_service.login(login_data, device_info)
+    except UnauthorizedException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
+    except Exception as e:
+        raise ValidationException(
+            detail={
+                "message": "Validation error",
+                "errors": str(e),
+                "documentation_url": "https://api.example.com/docs"
+            }
+        ) from e
+
+
+@auth_router.post("/refresh-token", response_model=TokenResponse, status_code=status.HTTP_200_OK)
+async def refresh_token(
+    token_data: TokenRefresh,
+    session: AsyncSession = Depends(get_session)
+):
+    user_repository = UserRepository(session)
+    auth_service = AuthService(user_repository)
+
+    try:
+        return await auth_service.refresh_token(token_data.refresh_token)
+    except UnauthorizedException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
     except Exception as e:
         raise ValidationException(
             detail={
