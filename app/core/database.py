@@ -1,16 +1,22 @@
-from datetime import datetime
-
-from sqlmodel import Session, SQLModel, create_engine
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import SQLModel, create_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from app.core.config import config
 
 async_engine = AsyncEngine(
     create_engine(
         url=config.DB_URL,
-        echo=True
+        echo=True,
+        future=True
     )
+)
+
+AsyncSessionLocal = sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 
@@ -20,11 +26,5 @@ async def db_init():
 
 
 async def get_session() -> AsyncSession:
-    session = sessionmaker(
-        bind=async_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
-
-    async with Session() as session:
+    async with AsyncSessionLocal() as session:
         yield session
