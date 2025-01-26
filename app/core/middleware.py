@@ -3,21 +3,31 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 
-async def validation_exception_handler(request: Request, exc: ValidationError):
+async def validation_exception_handler(request: Request, exc: Exception):
     errors = []
-    for error in exc.errors():
-        field = ".".join(str(loc) for loc in error["loc"])
+    if isinstance(exc, ValidationError):
+        # Handle Pydantic's ValidationError
+        for error in exc.errors():
+            field = ".".join(str(loc) for loc in error["loc"])
+            errors.append({
+                "field": field,
+                "message": error["msg"],
+                "type": error["type"],
+            })
+    elif isinstance(exc, HTTPException) and exc.status_code == 422:
+        # Handle your custom ValidationException
         errors.append({
-            "field": field,
-            "message": error["msg"],
-            "type": error["type"],
+            "field": "general",
+            "message": exc.detail,
+            "type": "validation_error",
         })
+
     return JSONResponse(
         status_code=422,
         content={
             "message": "Validation error",
             "errors": errors,
-            "documentation_url": "https://api.example.com/docs"
+            "documentation_url": "https://api.example.com/docs",
         },
     )
 
