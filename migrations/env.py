@@ -11,6 +11,9 @@ from alembic import context
 from app.core.config import config as settings
 
 from app.modules.authentication.models.user import User
+from app.modules.authentication.models import Token
+from app.modules.authentication.models import Device
+from app.modules.authentication.models import Session
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
