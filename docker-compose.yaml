@@ -1,12 +1,12 @@
 services:
-  authentication:
+  qwizzlearn:
     build:
-      context: ./authentication
+      context: .
     ports:
       - "8001:8000" # Map host port 8001 to container port 8000
-    container_name: authentication
+    container_name: qwizzlearn
     env_file:
-      - ./authentication/.env
+      - .env
     restart: unless-stopped
     healthcheck:
       test:

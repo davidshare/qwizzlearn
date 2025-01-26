@@ -5,8 +5,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import config
+from app.core.db import db_init
 
 load_dotenv()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("server is starting...")
+    await db_init()
+    yield
+    print("server has been stopped...")
 
 app = FastAPI(
     title=config.PROJECT_NAME,
