@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from app.core.mixins import TimestampMixin
 
 
@@ -18,3 +18,10 @@ class User(SQLModel, TimestampMixin, table=True):
     mfa_secret_key: Optional[str] = Field(default=None)
     mfa_enabled: bool = Field(default=False)
     last_login: Optional[datetime] = Field(default=None)
+
+    devices: List["Device"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "dynamic"})
+    sessions: List["Session"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "dynamic"})
+    tokens: List["Token"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "dynamic"})
