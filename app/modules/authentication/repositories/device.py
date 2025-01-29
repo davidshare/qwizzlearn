@@ -1,6 +1,6 @@
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import InternalServerException
 from ..models.device import Device
 
 
@@ -15,14 +15,21 @@ class DeviceRepository:
         await self.session.refresh(device)
         return device
 
-    async def get_device_by_id(self, device_id: str) -> Device:
-        """Retrieve a device by its ID."""
+    async def get_device_by_id(self, device_id: str) -> Device | None:
+        """Retrieve a device by its ID. Returns None if the device is not found."""
+
         statement = select(Device).where(Device.device_id == device_id)
-        result = await self.session.exec(statement)
-        device = result.first()
-        if not device:
-            raise NotFoundException("Device not found")
-        return device
+
+        try:
+            result = await self.session.exec(statement)
+            device = result.first()
+
+            return device if device else None
+
+        except Exception as e:
+            print(e)
+            raise InternalServerException(
+                "An error occurred while retrieving the device") from e
 
     async def mark_device_as_trusted(self, device_id: str) -> None:
         """Mark a device as trusted."""
