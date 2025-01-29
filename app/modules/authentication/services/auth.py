@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
-from jose import jwt
+from jose import jwt, JWTError
 from app.core.config import config
 from app.core.exceptions import InternalServerException, UnauthorizedException
 from app.core.security import hash_password, verify_password
@@ -32,21 +32,14 @@ class AuthService:
 
     async def register_user(self, user_data: UserCreate) -> UserResponse:
         try:
-            # Hash the password
             hashed_password = hash_password(user_data.password)
-
-            # Create the user object
             user = User(
                 username=user_data.username,
                 email=user_data.email,
                 phone_number=user_data.phone_number,
                 password_hash=hashed_password,
             )
-
-            # Save the user to the database asynchronously
             created_user = await self.user_repository.create_user(user)
-
-            # Return the user response
             return UserResponse.model_validate(created_user)
         except Exception as e:
             raise InternalServerException(
@@ -67,15 +60,10 @@ class AuthService:
         )
         return await self.session_repository.create_session(session)
 
-    async def create_token(self, user_id: int) -> Token:
-        token = Token(
-            user_id=user_id,
-            refresh_token=str(uuid4()),
-            expires_at=datetime.utcnow() + timedelta(days=30),
-        )
-        return await self.token_repository.create_token(token)
-
     async def create_device(self, user_id: int, device_info: str) -> Device:
+        device = await self.device_repository.get_device_by_id(device_info)
+        if device:
+            return device
         device = Device(
             user_id=user_id,
             device_id=device_info,
@@ -85,34 +73,45 @@ class AuthService:
         return await self.device_repository.create_device(device)
 
     async def login(self, login_data: LoginRequest, device_info: str) -> LoginResponse:
-        # Authenticate the user
         user = await self.authenticate_user(login_data.username, login_data.password)
-
-        # Create a new session
         session = await self.create_session(user.id, device_info)
-
-        # Create a new token
-        token = await self.create_token(user.id)
-
-        # Create or update the device
+        token = await self.create_refresh_token(user.id, data={"sub": user.id})
         await self.create_device(user.id, device_info)
-
-        # Generate access token
-        access_token = self.create_access_token(user.id)
-
+        access_token = self.create_access_token(data={"sub": user.id})
         return LoginResponse(
             access_token=access_token,
             refresh_token=token.refresh_token,
             token_type="bearer",
         )
 
-    def create_access_token(self, user_id: int) -> str:
-        expires_delta = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
-        to_encode = {"sub": str(
-            user_id), "exp": datetime.utcnow() + expires_delta}
+    def create_access_token(self, data: dict) -> dict:
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
             to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM)
         return encoded_jwt
+
+    async def create_refresh_token(self, user_id: int,  data: dict) -> Token:
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM)
+        token = Token(
+            user_id=user_id,
+            refresh_token=encoded_jwt,
+            expires_at=expire,
+        )
+        return await self.token_repository.create_token(token)
+
+    def decode_token(self, token: str):
+        try:
+            payload = jwt.decode(
+                token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
+            return payload
+        except JWTError as e:
+            raise UnauthorizedException('Invalid token') from e
 
     async def refresh_token(self, refresh_token: str) -> TokenResponse:
         # Retrieve the token from the database
@@ -120,11 +119,8 @@ class AuthService:
         if not token or token.revoked or token.expires_at < datetime.utcnow():
             raise UnauthorizedException("Invalid or expired refresh token")
 
-        # Generate a new access token
-        access_token = self.create_access_token(token.user_id)
-
-        # Generate a new refresh token
-        new_token = await self.create_token(token.user_id)
+        access_token = self.create_access_token(data={"sub": token.user_id})
+        new_token = await self.create_refresh_token(token.user_id, data={"sub": token.user_id})
 
         # Revoke the old refresh token
         await self.token_repository.revoke_token(token.refresh_token)

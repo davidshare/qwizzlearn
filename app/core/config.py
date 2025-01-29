@@ -13,6 +13,7 @@ class Config(BaseSettings):
     DB_URL: str
     API_V1_STR: str = "/api/v1/auth"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     FRONTEND_ORIGIN: str = "http://localhost:3000"
     JWT_SECRET_KEY: str = "your_secret_key"
     JWT_ALGORITHM: str = "HS256"
