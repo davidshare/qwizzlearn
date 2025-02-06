@@ -80,12 +80,6 @@ class AuthService:
             await self.create_device(user.id, device_info)
             access_token = self.create_access_token(data={"sub": user.id})
 
-            response = LoginResponse(
-                access_token=access_token,
-                refresh_token=token.refresh_token,
-                token_type="bearer",
-            )
-
             return LoginResponse(
                 access_token=access_token,
                 refresh_token=token.refresh_token,

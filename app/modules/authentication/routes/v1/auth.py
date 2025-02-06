@@ -11,7 +11,7 @@ from ...repositories.token import TokenRepository
 from ...schemas.user import UserCreate, UserResponse
 from ...services.auth import AuthService
 
-from ...schemas.login import LoginRequest, LoginResponse
+from ...schemas.login import LoginRequest, SuccessLoginResponse
 from ...schemas.token import TokenRefresh, TokenResponse
 
 auth_router = APIRouter()
@@ -45,7 +45,7 @@ async def register_user(user_data: UserCreate, session: AsyncSession = Depends(g
         ) from e
 
 
-@auth_router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
+@auth_router.post("/login", response_model=SuccessLoginResponse, status_code=status.HTTP_200_OK)
 async def login(
     response: Response,
     login_data: LoginRequest,
@@ -75,7 +75,10 @@ async def login(
             samesite="lax",
         )
 
-        return {"message": "Login successful"}
+        return {
+            "success": True,
+            "message": "Login successful"
+        }
     except UnauthorizedException as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e

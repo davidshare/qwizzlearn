@@ -1,7 +1,8 @@
+from typing import Callable
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import config
@@ -11,6 +12,7 @@ from app.core.exceptions import (
     InternalServerException,
     ValidationException
 )
+from app.core.logger import CustomLogger
 from app.core.middleware import (
     duplicate_entry_handler,
     internal_server_error_handler,
@@ -52,6 +54,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+logger = CustomLogger()
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next: Callable):
+    logger.log_request(request)
+    try:
+        response = await call_next(request)
+        logger.log_response(response)
+        return response
+    except Exception as exc:
+        logger.log_exception(exc)
+        raise
 
 
 @app.get("/")
