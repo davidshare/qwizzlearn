@@ -73,16 +73,27 @@ class AuthService:
         return await self.device_repository.create_device(device)
 
     async def login(self, login_data: LoginRequest, device_info: str) -> LoginResponse:
-        user = await self.authenticate_user(login_data.username, login_data.password)
-        session = await self.create_session(user.id, device_info)
-        token = await self.create_refresh_token(user.id, data={"sub": user.id})
-        await self.create_device(user.id, device_info)
-        access_token = self.create_access_token(data={"sub": user.id})
-        return LoginResponse(
-            access_token=access_token,
-            refresh_token=token.refresh_token,
-            token_type="bearer",
-        )
+        try:
+            user = await self.authenticate_user(login_data.username, login_data.password)
+            session = await self.create_session(user.id, device_info)
+            token = await self.create_refresh_token(user.id, data={"sub": user.id})
+            await self.create_device(user.id, device_info)
+            access_token = self.create_access_token(data={"sub": user.id})
+
+            response = LoginResponse(
+                access_token=access_token,
+                refresh_token=token.refresh_token,
+                token_type="bearer",
+            )
+
+            return LoginResponse(
+                access_token=access_token,
+                refresh_token=token.refresh_token,
+                token_type="bearer",
+            )
+        except Exception as e:
+            raise InternalServerException(
+                "An error occurred while retrieving the device") from e
 
     def create_access_token(self, data: dict) -> dict:
         to_encode = data.copy()

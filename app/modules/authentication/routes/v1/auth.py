@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.database import get_session
@@ -47,20 +47,40 @@ async def register_user(user_data: UserCreate, session: AsyncSession = Depends(g
 
 @auth_router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
 async def login(
+    response: Response,
     login_data: LoginRequest,
     request: Request,
     session: AsyncSession = Depends(get_session)
 ):
     auth_service = get_auth_service(session)
-
     device_info = request.headers.get("User-Agent", "Unknown Device")
 
     try:
-        return await auth_service.login(login_data, device_info)
+        tokens = await auth_service.login(login_data, device_info)
+        # Set HTTP-only cookies in the response
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {tokens.access_token}",
+            httponly=True,
+            max_age=15 * 60,  # 15 minutes
+            secure=True,  # Ensure cookies are only sent over HTTPS
+            samesite="lax",
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=tokens.refresh_token,
+            httponly=True,
+            max_age=7 * 24 * 60 * 60,  # 7 days
+            secure=True,
+            samesite="lax",
+        )
+
+        return {"message": "Login successful"}
     except UnauthorizedException as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)) from e
     except Exception as e:
+        print(e)
         raise ValidationException(
             detail={
                 "message": "Validation error",
