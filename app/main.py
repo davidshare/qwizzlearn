@@ -10,13 +10,13 @@ from app.core.database import db_init
 from app.core.exceptions import (
     DuplicateEntryException,
     InternalServerException,
-    ValidationException
+    ValidationException,
 )
 from app.core.logger import CustomLogger
 from app.core.middleware import (
     duplicate_entry_handler,
     internal_server_error_handler,
-    validation_exception_handler
+    validation_exception_handler,
 )
 
 from app.modules.authentication.routes.v1 import authentication_routers
@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
     yield
     print("server has been stopped...")
 
+
 app = FastAPI(
     title=config.PROJECT_NAME,
     description=config.PROJECT_DESCRIPTION,
@@ -38,22 +39,31 @@ app = FastAPI(
 )
 
 origins = [
-    config.FRONTEND_ORIGIN
+    config.FRONTEND_ORIGIN,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    "https://127.0.0.1:3000",
 ]
-
-app.add_exception_handler(ValidationException, validation_exception_handler)
-app.add_exception_handler(DuplicateEntryException, duplicate_entry_handler)
-app.add_exception_handler(
-    InternalServerException, internal_server_error_handler
-)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
+    allow_headers=[
+        "Access-Control-Allow-Headers",
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Origin",
+        "Set-Cookie",
+    ],
+    expose_headers=["Set-Cookie"],
 )
+
+app.add_exception_handler(ValidationException, validation_exception_handler)
+app.add_exception_handler(DuplicateEntryException, duplicate_entry_handler)
+app.add_exception_handler(InternalServerException, internal_server_error_handler)
 
 logger = CustomLogger()
 
@@ -81,5 +91,5 @@ def health_check():
 
 
 app.include_router(
-    authentication_routers, prefix='/api/v1/auth', tags=['authentication']
+    authentication_routers, prefix="/api/v1/auth", tags=["authentication"]
 )

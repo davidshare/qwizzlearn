@@ -23,6 +23,7 @@ class Config(BaseSettings):
     INITIAL_PASSWORD: str
     INITIAL_EMAIL: str
     APP_PORT: int = 8000
+    ENV: str = "development"
 
     model_config = SettingsConfigDict(
         env_file=".env",

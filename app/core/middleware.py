@@ -44,6 +44,7 @@ async def duplicate_entry_handler(request: Request, exc: HTTPException):
 
 
 async def internal_server_error_handler(request: Request, exc: HTTPException):
+    print(exc)
     return JSONResponse(
         status_code=500,
         content={

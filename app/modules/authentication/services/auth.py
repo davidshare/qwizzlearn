@@ -42,11 +42,13 @@ class AuthService:
             created_user = await self.user_repository.create_user(user)
             return UserResponse.model_validate(created_user)
         except Exception as e:
+            print(e)
             raise InternalServerException(
                 f"An error occurred: {str(e)}") from e
 
     async def authenticate_user(self, username: str, password: str) -> User:
         user = await self.user_repository.get_user_by_username(username)
+        print(user)
         if not user or not verify_password(password, user.password_hash):
             raise UnauthorizedException("Incorrect username or password")
         return user
@@ -86,6 +88,7 @@ class AuthService:
                 token_type="bearer",
             )
         except Exception as e:
+            print(e)
             raise InternalServerException(
                 "An error occurred while retrieving the device") from e
 
@@ -137,3 +140,9 @@ class AuthService:
             issued_at=datetime.utcnow(),
             expires_at=new_token.expires_at,
         )
+
+
+# TODO: Handle all known exceptions properly, including unique constraint exceptions
+# TODO: Separate routes from controllers
+# TODO: return correct error messages in json response
+# TODO: Log all errors as traces for easy debugging

@@ -15,3 +15,4 @@ class LoginResponse(BaseModel):
 class SuccessLoginResponse(BaseModel):
     message: str
     success: bool
+    access_token: str

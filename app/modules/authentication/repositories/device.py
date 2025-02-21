@@ -22,6 +22,7 @@ class DeviceRepository:
 
         try:
             result = await self.session.exec(statement)
+            print("**************", result)
             device = result.first()
 
             return device if device else None
