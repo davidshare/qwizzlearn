@@ -43,8 +43,7 @@ class AuthService:
             return UserResponse.model_validate(created_user)
         except Exception as e:
             print(e)
-            raise InternalServerException(
-                f"An error occurred: {str(e)}") from e
+            raise InternalServerException(f"An error occurred: {str(e)}") from e
 
     async def authenticate_user(self, username: str, password: str) -> User:
         user = await self.user_repository.get_user_by_username(username)
@@ -70,13 +69,15 @@ class AuthService:
             user_id=user_id,
             device_id=device_info,
             device_type="web",  # Default device type
-            is_trusted=False,   # Mark as untrusted by default
+            is_trusted=False,  # Mark as untrusted by default
         )
         return await self.device_repository.create_device(device)
 
     async def login(self, login_data: LoginRequest, device_info: str) -> LoginResponse:
         try:
-            user = await self.authenticate_user(login_data.username, login_data.password)
+            user = await self.authenticate_user(
+                login_data.username, login_data.password
+            )
             session = await self.create_session(user.id, device_info)
             token = await self.create_refresh_token(user.id, data={"sub": user.id})
             await self.create_device(user.id, device_info)
@@ -90,22 +91,27 @@ class AuthService:
         except Exception as e:
             print(e)
             raise InternalServerException(
-                "An error occurred while retrieving the device") from e
+                "An error occurred while retrieving the device"
+            ) from e
 
-    def create_access_token(self, data: dict) -> dict:
+    def create_access_token(self, data: dict) -> str:
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(
+            minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
-            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM)
+            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+        )
         return encoded_jwt
 
-    async def create_refresh_token(self, user_id: int,  data: dict) -> Token:
+    async def create_refresh_token(self, user_id: int, data: dict) -> Token:
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
-            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM)
+            to_encode, config.JWT_SECRET_KEY, algorithm=config.JWT_ALGORITHM
+        )
         token = Token(
             user_id=user_id,
             refresh_token=encoded_jwt,
@@ -116,10 +122,11 @@ class AuthService:
     def decode_token(self, token: str):
         try:
             payload = jwt.decode(
-                token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
+                token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM]
+            )
             return payload
         except JWTError as e:
-            raise UnauthorizedException('Invalid token') from e
+            raise UnauthorizedException("Invalid token") from e
 
     async def refresh_token(self, refresh_token: str) -> TokenResponse:
         # Retrieve the token from the database
@@ -128,7 +135,9 @@ class AuthService:
             raise UnauthorizedException("Invalid or expired refresh token")
 
         access_token = self.create_access_token(data={"sub": token.user_id})
-        new_token = await self.create_refresh_token(token.user_id, data={"sub": token.user_id})
+        new_token = await self.create_refresh_token(
+            token.user_id, data={"sub": token.user_id}
+        )
 
         # Revoke the old refresh token
         await self.token_repository.revoke_token(token.refresh_token)

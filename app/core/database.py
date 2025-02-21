@@ -6,14 +6,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.config import config
 
 async_engine = AsyncEngine(
-    create_engine(
-        url=config.DB_URL,
-        echo=True,
-        future=True
-    )
+    create_engine(url=config.DB_URL, echo=config.ENV == "development", future=True)
 )
 
-AsyncSessionLocal = sessionmaker(
+async_session_factory = sessionmaker(
     bind=async_engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -21,10 +17,15 @@ AsyncSessionLocal = sessionmaker(
 
 
 async def db_init():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+    try:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Failed to initialize database: {str(e)}")
+        raise
 
 
 async def get_session() -> AsyncSession:
-    async with AsyncSessionLocal() as session:
+    async with async_session_factory() as session:
         yield session

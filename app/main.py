@@ -36,6 +36,7 @@ app = FastAPI(
     title=config.PROJECT_NAME,
     description=config.PROJECT_DESCRIPTION,
     version=config.PROJECT_VERSION,
+    lifespan=lifespan,
 )
 
 origins = [
@@ -51,13 +52,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
-    allow_headers=[
-        "Access-Control-Allow-Headers",
-        "Content-Type",
-        "Authorization",
-        "Access-Control-Allow-Origin",
-        "Set-Cookie",
-    ],
+    allow_headers=["*"],
     expose_headers=["Set-Cookie"],
 )
 

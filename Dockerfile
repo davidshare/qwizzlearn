@@ -14,6 +14,10 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create a non-root user and set ownership
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Copy the rest of the application's code
 COPY . .
 

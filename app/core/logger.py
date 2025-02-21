@@ -10,11 +10,12 @@ import re
 
 class ColoredFormatter(Formatter):
     """Custom formatter to add color codes to log levels."""
+
     COLORS = {
-        logging.DEBUG: "\033[94m",     # Blue
-        logging.INFO: "\033[92m",      # Green
-        logging.WARNING: "\033[93m",   # Yellow
-        logging.ERROR: "\033[91m",     # Red
+        logging.DEBUG: "\033[94m",  # Blue
+        logging.INFO: "\033[92m",  # Green
+        logging.WARNING: "\033[93m",  # Yellow
+        logging.ERROR: "\033[91m",  # Red
         logging.CRITICAL: "\033[95m",  # Magenta
     }
     RESET = "\033[0m"
@@ -26,8 +27,12 @@ class ColoredFormatter(Formatter):
 
 
 class CustomLogger:
-    def __init__(self, name: str = "fastapi", log_level: int = logging.DEBUG,
-                 log_headers: bool = False):
+    def __init__(
+        self,
+        name: str = "fastapi",
+        log_level: int = logging.DEBUG,
+        log_headers: bool = False,
+    ):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(log_level)
 
@@ -55,7 +60,7 @@ class CustomLogger:
             r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}",
             # Credit card numbers without dashes
             r"\d{16}",
-            r"\d{3}-\d{2}-\d{4}"                               # SSN format
+            r"\d{3}-\d{2}-\d{4}",  # SSN format
         ]
         self.SENSITIVE_KEYS = (
             "headers",
@@ -69,8 +74,7 @@ class CustomLogger:
         """Sanitize sensitive data from log messages."""
         sanitized = message
         for pattern in self.SENSITIVE_PATTERNS:
-            sanitized = re.sub(
-                pattern, "[REDACTED]", sanitized, flags=re.IGNORECASE)
+            sanitized = re.sub(pattern, "[REDACTED]", sanitized, flags=re.IGNORECASE)
         return sanitized
 
     def _sanitize_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -92,15 +96,15 @@ class CustomLogger:
 
     def log_request(self, request: Request):
         """Log details of the incoming request."""
-        self.logger.info("Incoming request: %s %s",
-                         request.method, request.url)
+        self.logger.info("Incoming request: %s %s", request.method, request.url)
 
         if self.log_headers:
             sanitized_headers = self._sanitize_dict(dict(request.headers))
             self.logger.debug("Headers: %r", sanitized_headers)
 
-        self.logger.debug("Query params: %r",
-                          self._sanitize_dict(dict(request.query_params)))
+        self.logger.debug(
+            "Query params: %r", self._sanitize_dict(dict(request.query_params))
+        )
 
         if hasattr(request, "json"):
             try:
@@ -112,8 +116,7 @@ class CustomLogger:
 
     def log_response(self, response: Response):
         """Log details of the outgoing response."""
-        self.logger.info("Outgoing response: Status %s",
-                         response.status_code)
+        self.logger.info("Outgoing response: Status %s", response.status_code)
 
         if self.log_headers:
             sanitized_headers = self._sanitize_dict(dict(response.headers))
