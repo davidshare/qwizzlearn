@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
+from sqlalchemy.exc import SQLAlchemyError
 from jose import jwt, JWTError
 from app.core.config import config
 from app.core.exceptions import InternalServerException, UnauthorizedException
@@ -45,13 +46,6 @@ class AuthService:
             print(e)
             raise InternalServerException(f"An error occurred: {str(e)}") from e
 
-    async def authenticate_user(self, username: str, password: str) -> User:
-        user = await self.user_repository.get_user_by_username(username)
-        print(user)
-        if not user or not verify_password(password, user.password_hash):
-            raise UnauthorizedException("Incorrect username or password")
-        return user
-
     async def create_session(self, user_id: int, device_info: str) -> UserSession:
         session = UserSession(
             user_id=user_id,
@@ -74,11 +68,25 @@ class AuthService:
         return await self.device_repository.create_device(device)
 
     async def login(self, login_data: LoginRequest, device_info: str) -> LoginResponse:
+        """
+        Authenticate a user and return access/refresh tokens.
+
+        Args:
+            login_data (LoginRequest): Username and password data.
+            device_info (str): Device information for session tracking.
+
+        Returns:
+            LoginResponse: Tokens and token type on successful login.
+
+        Raises:
+            UnauthorizedException: If username or password is incorrect.
+            InternalServerException: If a server-side error occurs (e.g., database or token failure).
+        """
+        user = await self.user_repository.get_user_by_username(login_data.username)
+        if not user or not verify_password(login_data.password, user.password_hash):
+            raise UnauthorizedException("Incorrect username or password")
         try:
-            user = await self.authenticate_user(
-                login_data.username, login_data.password
-            )
-            session = await self.create_session(user.id, device_info)
+            await self.create_session(user.id, device_info)
             token = await self.create_refresh_token(user.id, data={"sub": user.id})
             await self.create_device(user.id, device_info)
             access_token = self.create_access_token(data={"sub": user.id})
@@ -88,11 +96,10 @@ class AuthService:
                 refresh_token=token.refresh_token,
                 token_type="bearer",
             )
+        except SQLAlchemyError as e:
+            raise InternalServerException("Database error during login") from e
         except Exception as e:
-            print(e)
-            raise InternalServerException(
-                "An error occurred while retrieving the device"
-            ) from e
+            raise InternalServerException("Failed to process login request") from e
 
     def create_access_token(self, data: dict) -> str:
         to_encode = data.copy()

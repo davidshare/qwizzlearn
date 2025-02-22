@@ -23,14 +23,15 @@ class DeviceRepository:
         try:
             result = await self.session.exec(statement)
             print("**************", result)
-            device = result.first()
-
-            return device if device else None
+            if result:
+                return result.first()
+            return None
 
         except Exception as e:
             print(e)
             raise InternalServerException(
-                "An error occurred while retrieving the device") from e
+                "An error occurred while retrieving the device"
+            ) from e
 
     async def mark_device_as_trusted(self, device_id: str) -> None:
         """Mark a device as trusted."""

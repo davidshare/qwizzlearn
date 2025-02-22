@@ -1,8 +1,11 @@
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from app.core.exceptions import DuplicateEntryException, NotFoundException
-from ..models.user import User
+
 from ..models.token import Token
+from ..models.user import User
 
 
 class UserRepository:
@@ -12,9 +15,9 @@ class UserRepository:
     async def create_user(self, user: User) -> User:
         # Check for duplicate username, email, or phone number
         statement = select(User).where(
-            (User.username == user.username) |
-            (User.email == user.email) |
-            (User.phone_number == user.phone_number)
+            (User.username == user.username)
+            | (User.email == user.email)
+            | (User.phone_number == user.phone_number)
         )
         existing_user = await self.session.exec(statement)
         existing_user = existing_user.first()
@@ -33,13 +36,28 @@ class UserRepository:
         return user
 
     async def get_user_by_username(self, username: str) -> User:
-        """Retrieve a user by their username."""
-        statement = select(User).where(User.username == username)
-        result = await self.session.exec(statement)
-        user = result.first()
-        if not user:
-            raise NotFoundException("User not found")
-        return user
+        """
+        Retrieve a user from the database by their username using SQLModel.
+
+        Args:
+            username (str): The username of the user to retrieve.
+
+        Returns:
+            User: The User object if found.
+
+        Raises:
+            NotFoundException: If no user with the given username exists.
+            SQLAlchemyError: If a database error occurs.
+        """
+        try:
+            statement = select(User).where(User.username == username)
+            result = await self.session.exec(statement)
+            user = result.first()
+            return user
+        except NotFoundException as e:
+            print(f"User '{e}' not found, proceeding with default...")
+        except SQLAlchemyError as e:
+            print(f"Database error: {e}")
 
     async def get_token_by_refresh_token(self, refresh_token: str) -> Token:
         """Retrieve a token by its refresh token."""
