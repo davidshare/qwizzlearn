@@ -77,6 +77,20 @@ async def login(
             expires=7 * 24 * 60 * 60,  # 7 days
             secure=IS_PRODUCTION,  # Only set to True in production
             samesite="lax",
+            path="/",
+            domain="localhost",
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=f"Bearer {tokens.access_token}",
+            httponly=True,
+            max_age=15 * 60,  # 15 minutes
+            expires=15 * 60,  # 15 minutes
+            secure=IS_PRODUCTION,  # Ensure cookies are only sent over HTTPS
+            samesite="lax",
+            path="/",
+            domain="localhost",
         )
 
         return {
