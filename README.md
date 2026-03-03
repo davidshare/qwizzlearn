@@ -2,7 +2,7 @@
 
 **QwizzLearn** is a high-performance, asynchronous REST API built with **FastAPI**. It serves as the backbone for an educational platform, handling quiz orchestration, user progress tracking, and automated assessment logic with speed and type safety.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python)
 * **Asynchronous ORM:** SQLAlchemy (with `asyncio`) or Tortoise ORM
